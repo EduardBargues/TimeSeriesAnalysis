@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesAnalysis", "TimeSeriesAnalysis.csproj", "{94B52089-5070-464C-AD77-42D31A7AFE46}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject", "..\UnitTestProject\UnitTestProject.csproj", "{E9EF02F8-7470-4E70-8D1A-7AA8B0940114}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAppProject", "TestAppProject\TestAppProject.csproj", "{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{CA321526-92BC-4572-A3C7-6B57968B1C3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MachineLearning", "MachineLearning\MachineLearning.csproj", "{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interface", "Interface\Interface.csproj", "{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{9358D248-6634-464C-AA0A-D1DF05C93AA5}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\asdf\STL_Aluminum.csv = ..\..\asdf\STL_Aluminum.csv
+		..\..\asdf\STL_Brent.csv = ..\..\asdf\STL_Brent.csv
+		..\..\asdf\STL_Copper.csv = ..\..\asdf\STL_Copper.csv
+		..\..\asdf\STL_EuroDolar.csv = ..\..\asdf\STL_EuroDolar.csv
+		..\..\asdf\STL_Molybdenum.csv = ..\..\asdf\STL_Molybdenum.csv
+		..\..\asdf\STL_Nickel.csv = ..\..\asdf\STL_Nickel.csv
+		..\..\asdf\STL_Tin.csv = ..\..\asdf\STL_Tin.csv
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{94B52089-5070-464C-AD77-42D31A7AFE46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94B52089-5070-464C-AD77-42D31A7AFE46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94B52089-5070-464C-AD77-42D31A7AFE46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94B52089-5070-464C-AD77-42D31A7AFE46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9EF02F8-7470-4E70-8D1A-7AA8B0940114}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9EF02F8-7470-4E70-8D1A-7AA8B0940114}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9EF02F8-7470-4E70-8D1A-7AA8B0940114}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9EF02F8-7470-4E70-8D1A-7AA8B0940114}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
