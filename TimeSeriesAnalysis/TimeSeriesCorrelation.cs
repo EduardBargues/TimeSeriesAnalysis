@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using Common;
 using MathNet.Numerics.Statistics;
 using MoreLinq;
 using OxyPlot;

@@ -180,11 +180,8 @@ namespace TestAppProject
             IEnumerable<DateValue> values = TimeSeries.FromCsvFile(path);
             TimeSeries series = values.ToTimeSeries();
             series.Name = "Series";
-            TimeSeries trend = TimeSeriesDecomposition.GetCenteredMovingAverage(
-                tseries: series,
-                span: TimeSpan.FromDays(4 * 7),
-                step: TimeSpan.FromDays(1),
-                maintainExtremeDays: false);
+            TimeSeries trend = series.GetCenteredMovingAverage(
+                 span: TimeSpan.FromDays(4 * 7));
             LoessDecompositionParameters parameters = new LoessDecompositionParameters()
             {
                 Series = series,

@@ -87,7 +87,6 @@
     <Compile Include="TimeSeriesPredictorAverage.cs" />
     <Compile Include="TimeSeriesPredictorDrift.cs" />
     <Compile Include="TimeSeriesPredictorNaive.cs" />
-    <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TimeSeries.cs" />
   </ItemGroup>
   <ItemGroup>

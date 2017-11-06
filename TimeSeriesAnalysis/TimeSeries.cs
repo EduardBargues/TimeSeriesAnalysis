@@ -164,7 +164,7 @@ namespace TimeSeriesAnalysis
         public TimeSeries AddMissingValuesWith(Func<DateTime, double> function)
         {
             Dictionary<DateTime, double> vals = HasValues()
-                ? GetFirstDate().GetDaysTo(GetLastDate())
+                ? GetMinimumDate().GetDaysTo(GetMaximumDate())
                     .ToDictionary(day => day,
                                   day => ContainsValueAt(day)
                                       ? this[day]
@@ -410,11 +410,11 @@ namespace TimeSeriesAnalysis
         {
             return GetCommonDates(new List<TimeSeries> { this, ts });
         }
-        public DateTime GetFirstDate()
+        public DateTime GetMinimumDate()
         {
             return TimeCoordinates.Min();
         }
-        public DateTime GetLastDate()
+        public DateTime GetMaximumDate()
         {
             return TimeCoordinates.Max();
         }
@@ -442,8 +442,8 @@ namespace TimeSeriesAnalysis
             if (HasValues())
             {
                 DateTime relativeDate = lookInTheFuture
-                    ? GetLastDate()
-                    : GetFirstDate();
+                    ? GetMaximumDate()
+                    : GetMinimumDate();
                 closestDate = day.GetDaysTo(relativeDate)
                     .FirstOrDefault(ContainsValueAt);
 
@@ -457,7 +457,7 @@ namespace TimeSeriesAnalysis
         public IEnumerable<DateTime> GetMissingDates()
         {
             return HasValues()
-                ? GetFirstDate().GetDaysTo(GetLastDate())
+                ? GetMinimumDate().GetDaysTo(GetMaximumDate())
                     .Where(day => !ContainsValueAt(day))
                 : new List<DateTime>();
         }
@@ -468,8 +468,8 @@ namespace TimeSeriesAnalysis
 
             if (HasValues())
             {
-                DateTime firstDate = GetFirstDate();
-                DateTime lastDate = GetLastDate();
+                DateTime firstDate = GetMinimumDate();
+                DateTime lastDate = GetMaximumDate();
                 if (firstDate >= date)
                 {
                     DateTime nextDate = GetDatesBetween(firstDate.AddDays(1), lastDate)
@@ -516,7 +516,7 @@ namespace TimeSeriesAnalysis
 
             if (HasValues())
             {
-                DateTime lastDate = GetLastDate();
+                DateTime lastDate = GetMaximumDate();
                 if (lastDate >= date.AddDays(1))
                     result = date.AddDays(1).GetDaysTo(lastDate)
                         .First(ContainsValueAt);
@@ -530,7 +530,7 @@ namespace TimeSeriesAnalysis
 
             if (HasValues())
             {
-                DateTime firstDate = GetFirstDate();
+                DateTime firstDate = GetMinimumDate();
                 if (firstDate <= date.AddDays(-1))
                     result = date.AddDays(-1).GetDaysTo(firstDate)
                         .First(ContainsValueAt);
@@ -597,7 +597,7 @@ namespace TimeSeriesAnalysis
             };
             return view;
         }
-        
+
         private static DataPointSeries GetDataPointSeries(TimeSeriesPlotInfo pi)
         {
             if (pi.SeriesType == typeof(FunctionSeries))
@@ -646,7 +646,7 @@ namespace TimeSeriesAnalysis
             return GetPlotView(parameters.ToList());
         }
 
-        
+
         #endregion
 
         public static IEnumerable<DateTime> GetCommonDates(List<TimeSeries> tss)
@@ -673,6 +673,81 @@ namespace TimeSeriesAnalysis
         public bool Any()
         {
             return HasValues();
+        }
+
+        public TimeSeries GetSimpleMovingAverage(
+            TimeSpan span)
+        {
+            TimeSeries result = new TimeSeries();
+
+            if (HasValues())
+            {
+                List<DateTime> days = TimeCoordinates
+                    .ToList();
+                Values
+                    .ForEach(dv =>
+                    {
+                        DateTime leftDate = dv.Date.Add(-span);
+                        double average = days
+                            .Where(day2 => day2 >= leftDate &&
+                                           day2 <= dv.Date)
+                            .Average(day2 => this[day2]);
+                        result[dv.Date] = average;
+                    });
+            }
+
+            return result;
+        }
+        public TimeSeries GetCenteredMovingAverage(
+            TimeSpan span)
+        {
+            return GetCenteredMovingAverage(span.DivideBy(2), span.DivideBy(2));
+        }
+        public TimeSeries GetCenteredMovingAverage(
+            TimeSpan leftSpan,
+            TimeSpan rightSpan)
+        {
+            TimeSeries result = new TimeSeries();
+
+            if (HasValues())
+            {
+                DateTime firstDate = GetMinimumDate();
+                DateTime lastDate = GetMaximumDate();
+                List<DateTime> days = TimeCoordinates
+                    .ToList();
+                TimeCoordinates
+                    .Where(day => day.Add(-leftSpan) >= firstDate &&
+                                  day.Add(rightSpan) <= lastDate)
+                    .ForEach(day =>
+                    {
+                        DateTime leftDate = day.Add(-leftSpan);
+                        DateTime rightDate = day.Add(rightSpan);
+                        List<double> rangeValues = days
+                            .Where(day2 => day2 >= leftDate &&
+                                           day2 <= rightDate)
+                            .Select(day2 => this[day2])
+                            .ToList();
+                        if (rangeValues.Any())
+                            result[day] = rangeValues.Average();
+                    });
+            }
+
+            return result;
+        }
+        public IEnumerable<DateValue> GetExponentialMovingAverage(
+            TimeSpan span,
+            TimeSpan step)
+        {
+            int n = (int)span.DivideBy(step);
+            double weight = (double)2 / (n + 1);
+
+            double previousEmaValue = 0;
+            foreach (DateTime date in GetMinimumDate().GetDatesTo(GetMaximumDate(), step))
+            {
+                double value = weight * this[date] + previousEmaValue * (1 - weight);
+                previousEmaValue = value;
+                yield return new DateValue(date, value);
+            }
         }
     }
 }

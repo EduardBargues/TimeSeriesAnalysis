@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace TimeSeriesAnalysis
+namespace Common
 {
-    public static class TimeSpanExtensions
+    public static class ExtensionsTimeSpan
     {
         public static TimeSpan MultiplyBy(this TimeSpan span, double factor)
         {

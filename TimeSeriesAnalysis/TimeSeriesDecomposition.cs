@@ -24,11 +24,9 @@ namespace TimeSeriesAnalysis
             TimeSeriesDecomposition result = new TimeSeriesDecomposition();
             if (ts.Any())
             {
-                result.Trend = GetCenteredMovingAverage(
-                    ts,
+                result.Trend = ts.GetCenteredMovingAverage(
                     parameters.MovingAverageDays,
-                    parameters.Step,
-                    parameters.MaintainExtremeValues);
+                    parameters.Step);
                 TimeSeries seasonalComponent = GetSeasonalComponent(
                     ts,
                     parameters.SeasonalPeriod,
@@ -41,104 +39,8 @@ namespace TimeSeriesAnalysis
 
             return result;
         }
-        public static TimeSeries GetCenteredMovingAverage(
-            TimeSeries tseries,
-            TimeSpan span,
-            TimeSpan step,
-            bool maintainExtremeDays)
-        {
-            return GetMovingAverage(
-                tseries,
-                span.DivideBy(2.0),
-                span.DivideBy(2.0),
-                step,
-                maintainExtremeDays);
-        }
-        public static TimeSeries GetMovingAverage(
-            TimeSeries tseries,
-            TimeSpan leftSpan,
-            TimeSpan rightSpan,
-            TimeSpan step,
-            bool maintainExtremeDates)
-        {
-            TimeSeries result = new TimeSeries();
-            if (tseries.HasValues())
-            {
-                TimeSeries tsToOperateWith = maintainExtremeDates
-                    ? GetExtendedTimeSeries(tseries, leftSpan, rightSpan)
-                    : tseries.Copy();
-                result = GetMovingAverage(tsToOperateWith, leftSpan, rightSpan);
-            }
-
-            return result;
-        }
-        private static TimeSeries GetExtendedTimeSeries(
-            TimeSeries tseries,
-            TimeSpan leftSpan,
-            TimeSpan rightSpan)
-        {
-            DateTime firstDay = tseries.GetFirstDate();
-            DateTime limitLeftDay = firstDay.Add(leftSpan);
-            double mainTimeSeriesLeftValue = tseries[firstDay];
-            TimeSeries leftTimeSeries = tseries.Values
-                .Where(dv => dv.Date <= limitLeftDay)
-                .OffsetBy(-leftSpan)
-                .ToTimeSeries();
-            double leftTimeSeriesValue = leftTimeSeries[firstDay];
-            double leftIncrement = mainTimeSeriesLeftValue - leftTimeSeriesValue;
-            IEnumerable<DateValue> leftValues = leftTimeSeries.Sum(leftIncrement);
-
-            DateTime lastDay = tseries.GetLastDate();
-            DateTime limitRightDay = lastDay.Add(-rightSpan);
-            double mainTimeSeriesRightValue = tseries[lastDay];
-            TimeSeries rightTimeSeries = tseries.Values
-                .Where(dv => dv.Date >= limitRightDay)
-                .OffsetBy(rightSpan)
-                .ToTimeSeries();
-            double rightTimeSeriesValue = rightTimeSeries[lastDay];
-            double rightIncrement = mainTimeSeriesRightValue - rightTimeSeriesValue;
-            IEnumerable<DateValue> rightValues = rightTimeSeries
-                .Sum(rightIncrement);
-
-            List<DateValue> valuesToAdd = leftValues.ToList();
-            valuesToAdd.AddRange(rightValues);
-
-            return tseries.Values
-                .Merge(valuesToAdd)
-                .ToTimeSeries();
-        }
-        private static TimeSeries GetMovingAverage(
-            TimeSeries ts,
-            TimeSpan leftSpan,
-            TimeSpan rightSpan)
-        {
-            TimeSeries result = new TimeSeries();
-
-            if (ts.HasValues())
-            {
-                DateTime firstDate = ts.GetFirstDate();
-                DateTime lastDate = ts.GetLastDate();
-                List<DateTime> days = ts.TimeCoordinates
-                    .ToList();
-                ts.TimeCoordinates
-                    .Where(day => day.Add(-leftSpan) >= firstDate &&
-                                  day.Add(rightSpan) <= lastDate)
-                    .ForEach(day =>
-                    {
-                        DateTime leftDate = day.Add(-leftSpan);
-                        DateTime rightDate = day.Add(rightSpan);
-                        List<double> rangeValues = days
-                            .Where(day2 => day2 >= leftDate &&
-                                           day2 <= rightDate)
-                            .Select(day2 => ts[day2])
-                            .ToList();
-                        if (rangeValues.Any())
-                            result[day] = rangeValues.Average();
-                    });
-            }
-
-            return result;
-        }
+        
+        
         private static TimeSeries GetSeasonalComponent(
             TimeSeries tseries,
             TimeSpan seasonalPeriod,
@@ -399,8 +301,8 @@ namespace TimeSeriesAnalysis
 
             if (tseries.HasValues())
             {
-                DateTime firstDate = tseries.GetFirstDate();
-                DateTime lastDate = tseries.GetLastDate();
+                DateTime firstDate = tseries.GetMinimumDate();
+                DateTime lastDate = tseries.GetMaximumDate();
 
                 int groupLabel = 1;
                 TimeSpan correctedSeasonalPeriod = seasonalPeriod - step;
