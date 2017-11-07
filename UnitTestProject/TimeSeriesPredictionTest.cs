@@ -77,7 +77,7 @@ namespace UnitTestProject
                 targetLabel: target.Name);
 
             TimeSpan correlationSpan = new TimeSpan(10, 0, 0, 0);
-            Assert.IsTrue(target.TimeCoordinates
+            Assert.IsTrue(target.Dates
                 .Where(day => target.ContainsValueAt(day.Add(predictionSpan)) &&
                               indicator.ContainsValueAt(day.Add(-correlationSpan)) &&
                               indicator.ContainsValueAt(day.Add(-correlationSpan).Add(predictionSpan)))
@@ -130,7 +130,7 @@ namespace UnitTestProject
                 trainingLabels: new List<string>() { ind1.Name, ind2.Name },
                 targetLabel: target.Name);
             
-            Assert.IsTrue(target.TimeCoordinates
+            Assert.IsTrue(target.Dates
                 .Where(day => target.ContainsValueAt(day.Add(predictionSpan)) &&
                               indicators.All(ind => ind.ContainsValueAt(day.Add(-correlationSpan)) &&
                                                     ind.ContainsValueAt(day.Add(-correlationSpan).Add(predictionSpan))))

@@ -26,7 +26,7 @@ namespace TimeSeriesAnalysis
             TimeSeries target = pairs
                 .First(pair => pair.Target.Name == targetName)
                 .Target;
-            target.TimeCoordinates
+            target.Dates
                 .ForEach(day =>
                 {
                     DataRow row = table.NewRow();

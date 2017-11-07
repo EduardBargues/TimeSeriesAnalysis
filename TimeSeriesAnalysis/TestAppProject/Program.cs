@@ -38,7 +38,47 @@ namespace TestAppProject
             //TestMultiplePlots();
             //TestHistogram();
             //TestGenericPlotter();
-            TestCorrelationPlot();
+            //TestCorrelationPlot();
+            //TestMovingAverages();
+            TestMultiColorSeries();
+        }
+
+        private static void TestMultiColorSeries()
+        {
+            DateTime firstDate = new DateTime(2000, 1, 1);
+            DateTime lastDate = new DateTime(2000, 12, 31);
+            TimeSeries random = TimeSeries.CreateDailyNormallyRandomSeries(0, 10, firstDate, lastDate);
+            TimeSeries sinus = TimeSeries.CreateDailySinusoidalTimeSeries(100, 2 * Math.PI / 365, 0, firstDate, lastDate);
+            TimeSeries sum = sinus.Sum(random);
+            TimeSeries.Plot(
+                new TimeSeriesPlotInfo(sum,
+                    dv => dv.Value >= 0
+                        ? OxyColor.FromRgb(255, 0, 0)
+                        : OxyColor.FromRgb(0, 0, 255),
+                    color => color == OxyColor.FromRgb(255, 0, 0)
+                        ? "T(t)>=0"
+                        : "T(t)<0"
+                ));
+        }
+
+        private static void TestMovingAverages()
+        {
+            DateTime firstDate = new DateTime(2000, 1, 1);
+            DateTime lastDate = new DateTime(2000, 12, 31);
+            TimeSeries random = TimeSeries.CreateDailyNormallyRandomSeries(0, 100, firstDate, lastDate);
+            TimeSeries sinus = TimeSeries.CreateDailySinusoidalTimeSeries(100, 2 * Math.PI / 365, 0, firstDate, lastDate);
+            TimeSeries sum = sinus.Sum(random);
+            sum.Name = "Series";
+            const int period = 15;
+            TimeSeries sma = sum.GetSimpleMovingAverage(TimeSpan.FromDays(period))
+                .ToTimeSeries($"SMA-{period}");
+            TimeSeries ema = sum.GetExponentialMovingAverage(TimeSpan.FromDays(period), TimeSpan.FromDays(1))
+                .ToTimeSeries($"EMA-{period}");
+            TimeSeries.Plot(
+                new TimeSeriesPlotInfo(sum, OxyColor.FromRgb(255, 0, 0)),
+                new TimeSeriesPlotInfo(sma, OxyColor.FromRgb(0, 255, 0)),
+                new TimeSeriesPlotInfo(ema, OxyColor.FromRgb(0, 0, 255))
+                );
         }
 
         private static void TestCorrelationPlot()
@@ -181,7 +221,8 @@ namespace TestAppProject
             TimeSeries series = values.ToTimeSeries();
             series.Name = "Series";
             TimeSeries trend = series.GetCenteredMovingAverage(
-                 span: TimeSpan.FromDays(4 * 7));
+                 span: TimeSpan.FromDays(4 * 7))
+                 .ToTimeSeries();
             LoessDecompositionParameters parameters = new LoessDecompositionParameters()
             {
                 Series = series,
@@ -197,7 +238,7 @@ namespace TestAppProject
                          new TimeSeriesPlotInfo(decomp.Trend, OxyColor.FromRgb(0, 0, 255)),
                          new TimeSeriesPlotInfo(decomp.Seasonal, OxyColor.FromRgb(0, 255, 0)));
             Random r = new Random();
-            int minYear = series.TimeCoordinates.Min(dv => dv.Year);
+            int minYear = series.Dates.Min(dv => dv.Year);
             List<TimeSeriesPlotInfo> infos = trend.Values
                 .GroupBy(dv => dv.Date.Year)
                 .Where(g => g.Key >= 2010 &&
@@ -404,7 +445,7 @@ namespace TestAppProject
                 Title = $"{label} - Remainder"
             };
             TimeSeries ts = dec.Tseries;
-            foreach (DateTime day in ts.TimeCoordinates.OrderBy(day => day))
+            foreach (DateTime day in ts.Dates.OrderBy(day => day))
             {
                 double dayNumeric = DateTimeAxis.ToDouble(day);
                 series.Points.Add(new DataPoint(dayNumeric, ts[day]));
@@ -448,7 +489,7 @@ namespace TestAppProject
                 Title = $"{label} 2"
             };
 
-            foreach (DateTime day in ts1.TimeCoordinates.OrderBy(day => day))
+            foreach (DateTime day in ts1.Dates.OrderBy(day => day))
             {
                 double dayNumeric = DateTimeAxis.ToDouble(day);
                 series1.Points.Add(new DataPoint(dayNumeric, ts1[day]));
@@ -494,7 +535,7 @@ namespace TestAppProject
                 Title = "Trend 2"
             };
             TimeSeries csvTs = csvTsd.Tseries;
-            foreach (DateTime day in csvTs.TimeCoordinates.OrderBy(day => day))
+            foreach (DateTime day in csvTs.Dates.OrderBy(day => day))
             {
                 double dayNumeric = DateTimeAxis.ToDouble(day);
                 series1.Points.Add(new DataPoint(dayNumeric, csvTs[day]));

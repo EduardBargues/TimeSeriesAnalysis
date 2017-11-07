@@ -16,7 +16,7 @@ namespace UnitTestProject
         {
             TimeSeries ts = TimeSeries.CreateDailyLinearTimeSeries(0, 1, new DateTime(2000, 1, 1), new DateTime(2000, 12, 31));
             TimeSeries sumTs = ts.Sum(ts);
-            Assert.IsTrue(sumTs.TimeCoordinates
+            Assert.IsTrue(sumTs.Dates
                 .All(day => Math.Abs(sumTs[day] - 2 * ts[day]) < tolerance));
         }
         [TestMethod]
@@ -24,7 +24,7 @@ namespace UnitTestProject
         {
             TimeSeries ts = TimeSeries.CreateDailyLinearTimeSeries(0, 1, new DateTime(2000, 1, 1), new DateTime(2000, 12, 31));
             TimeSeries timesTs = ts.MultiplyBy(5);
-            Assert.IsTrue(timesTs.TimeCoordinates
+            Assert.IsTrue(timesTs.Dates
                 .All(day => Math.Abs(timesTs[day] - 5 * ts[day]) < tolerance));
         }
         [TestMethod]
@@ -32,7 +32,7 @@ namespace UnitTestProject
         {
             TimeSeries ts = TimeSeries.CreateDailyLinearTimeSeries(0, 1, new DateTime(2000, 1, 1), new DateTime(2000, 12, 31));
             TimeSeries substractTs = ts.Substract(ts);
-            Assert.IsTrue(substractTs.TimeCoordinates
+            Assert.IsTrue(substractTs.Dates
                 .All(day => Math.Abs(substractTs[day]) < tolerance));
         }
         [TestMethod]

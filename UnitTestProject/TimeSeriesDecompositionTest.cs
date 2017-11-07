@@ -79,7 +79,7 @@ namespace UnitTestProject
         }
         private bool AreTimeSeriesAlmostEquals(TimeSeries t1, TimeSeries t2, double tolerance)
         {
-            return t1.TimeCoordinates
+            return t1.Dates
                 .Where(t2.ContainsValueAt)
                 .All(day => AreNumbersAlmostEquals(t1[day], t2[day], tolerance));
         }

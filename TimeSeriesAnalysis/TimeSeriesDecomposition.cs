@@ -26,7 +26,8 @@ namespace TimeSeriesAnalysis
             {
                 result.Trend = ts.GetCenteredMovingAverage(
                     parameters.MovingAverageDays,
-                    parameters.Step);
+                    parameters.Step)
+                    .ToTimeSeries();
                 TimeSeries seasonalComponent = GetSeasonalComponent(
                     ts,
                     parameters.SeasonalPeriod,
@@ -39,8 +40,8 @@ namespace TimeSeriesAnalysis
 
             return result;
         }
-        
-        
+
+
         private static TimeSeries GetSeasonalComponent(
             TimeSeries tseries,
             TimeSpan seasonalPeriod,
@@ -54,7 +55,7 @@ namespace TimeSeriesAnalysis
                     step)
                 .ForEach(series =>
                 {
-                    double average = series.TimeCoordinates
+                    double average = series.Dates
                         .Average(day => series[day]);
                     TimeSeries timeSeries = series.Values
                         .Select(dv => dv.SetValue(average))
@@ -76,11 +77,11 @@ namespace TimeSeriesAnalysis
             {
                 result.Trend = SmoothTimeSeriesWithLoess(
                         series.Values,
-                        series.TimeCoordinates,
+                        series.Dates,
                         parameters.NumberOfNeighbors,
                         parameters.RobustnessIterations,
                         parameters.LocalPolynomialDegree,
-                        series.TimeCoordinates.ToDictionary(date => date, date => 1.0))
+                        series.Dates.ToDictionary(date => date, date => 1.0))
                     .ToTimeSeries();
                 result.Seasonal = GetSeasonalComponent(
                         series,

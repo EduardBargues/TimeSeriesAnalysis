@@ -18,7 +18,7 @@ namespace TimeSeriesAnalysis
     {
         private readonly Dictionary<DateTime, double> values = new Dictionary<DateTime, double>();
 
-        public IEnumerable<DateTime> TimeCoordinates => values.Keys;
+        public IEnumerable<DateTime> Dates => values.Keys;
         public IEnumerable<DateValue> Values => values.Keys
             .Select(date => new DateValue(date, this[date]));
         public string Name { get; set; }
@@ -119,7 +119,7 @@ namespace TimeSeriesAnalysis
         }
         public bool HasValues()
         {
-            return TimeCoordinates.Any();
+            return Dates.Any();
         }
 
         #region Apply functions
@@ -153,8 +153,8 @@ namespace TimeSeriesAnalysis
         }
         public TimeSeries Merge(TimeSeries ts)
         {
-            return TimeCoordinates
-                .Union(ts.TimeCoordinates)
+            return Dates
+                .Union(ts.Dates)
                 .Select(date => new DateValue(date, ContainsValueAt(date)
                                                         ? this[date]
                                                         : ts[date]))
@@ -304,7 +304,7 @@ namespace TimeSeriesAnalysis
 
         public double Average()
         {
-            return TimeCoordinates
+            return Dates
                 .Average(date => this[date]);
         }
         #endregion
@@ -412,15 +412,15 @@ namespace TimeSeriesAnalysis
         }
         public DateTime GetMinimumDate()
         {
-            return TimeCoordinates.Min();
+            return Dates.Min();
         }
         public DateTime GetMaximumDate()
         {
-            return TimeCoordinates.Max();
+            return Dates.Max();
         }
         public IEnumerable<DateTime> GetDatesBetween(DateTime firstDate, DateTime lastDate)
         {
-            return TimeCoordinates
+            return Dates
                 .Where(day => firstDate <= day &&
                               day <= lastDate);
         }
@@ -496,10 +496,10 @@ namespace TimeSeriesAnalysis
                 if (firstDate < date &&
                     lastDate > date)
                 {
-                    DateTime leftDay = TimeCoordinates
+                    DateTime leftDay = Dates
                         .Where(day => day <= date)
                         .MinBy(day => (date - day).TotalDays);
-                    DateTime rightDay = TimeCoordinates
+                    DateTime rightDay = Dates
                         .Where(day => day >= date)
                         .MinBy(day => (day - date).TotalDays);
                     double range = (rightDay - leftDay).TotalDays;
@@ -548,7 +548,7 @@ namespace TimeSeriesAnalysis
                 MarkerType = MarkerType.None,
                 Color = OxyColor.FromRgb(255, 0, 0)
             };
-            foreach (DateTime day in ts.TimeCoordinates.OrderBy(day => day))
+            foreach (DateTime day in ts.Dates.OrderBy(day => day))
             {
                 double dayNumeric = DateTimeAxis.ToDouble(day);
                 series.Points.Add(new DataPoint(dayNumeric, ts[day]));
@@ -586,7 +586,7 @@ namespace TimeSeriesAnalysis
 
             parameters
                 .OrderByDescending(pi => pi.Order)
-                .ForEach(pi => model.Series.Add(GetDataPointSeries(pi)));
+                .ForEach(pi => GetDataPointSeries(pi).ForEach(dps => model.Series.Add(dps)));
 
             model.Axes.Clear();
             model.Axes.Add(new DateTimeAxis());
@@ -598,12 +598,12 @@ namespace TimeSeriesAnalysis
             return view;
         }
 
-        private static DataPointSeries GetDataPointSeries(TimeSeriesPlotInfo pi)
+        private static IEnumerable<DataPointSeries> GetDataPointSeries(TimeSeriesPlotInfo pi)
         {
             if (pi.SeriesType == typeof(FunctionSeries))
                 return GetFunctionSeries(pi);
-            if (pi.SeriesType == typeof(LinearBarSeries))
-                return GetLinearBarSeries(pi);
+            //if (pi.SeriesType == typeof(LinearBarSeries))
+            //    return GetLinearBarSeries(pi);
 
             throw new NotImplementedException("El tipo de gráfico no ha sido implementado");
         }
@@ -623,21 +623,46 @@ namespace TimeSeriesAnalysis
                 });
             return series;
         }
-        private static FunctionSeries GetFunctionSeries(TimeSeriesPlotInfo info)
+        private static List<FunctionSeries> GetFunctionSeries(TimeSeriesPlotInfo info)
         {
-            FunctionSeries series = new FunctionSeries
+            List<FunctionSeries> series = new List<FunctionSeries>();
+            List<DateValue> values = info.Series.Values
+                .OrderBy(dv => dv.Date)
+                .ToList();
+            OxyColor previousColor = info.ColorFunction.Invoke(values.First());
+            FunctionSeries currentSeries = new FunctionSeries
             {
                 MarkerType = info.Marker,
-                Color = info.Color,
-                Title = info.Title,
+                Title = info.LegendTitleFunction.Invoke(previousColor),
+                RenderInLegend = true
             };
-            info.Series.Values
-                .OrderBy(dv => dv.Date)
+            HashSet<OxyColor> plottedColors = new HashSet<OxyColor>();
+            values
                 .ForEach(dv =>
                 {
                     double dayNumeric = DateTimeAxis.ToDouble(dv.Date);
-                    series.Points.Add(new DataPoint(dayNumeric, dv.Value));
+                    DataPoint point = new DataPoint(dayNumeric, dv.Value);
+                    OxyColor color = info.ColorFunction.Invoke(dv);
+                    if (color != previousColor)
+                    {
+                        if (currentSeries.Points.Count >= 2)
+                        {
+                            plottedColors.Add(previousColor);
+                            series.Add(currentSeries);
+                        }
+                        currentSeries = new FunctionSeries
+                        {
+                            MarkerType = info.Marker,
+                            Title = info.LegendTitleFunction.Invoke(color),
+                            Color = color,
+                            RenderInLegend = !plottedColors.Contains(color),
+                        };
+                    }
+                    currentSeries.Points.Add(point);
+                    previousColor = color;
                 });
+            if (currentSeries.Points.Count >= 2)
+                series.Add(currentSeries);
 
             return series;
         }
@@ -651,7 +676,7 @@ namespace TimeSeriesAnalysis
 
         public static IEnumerable<DateTime> GetCommonDates(List<TimeSeries> tss)
         {
-            return tss.First().TimeCoordinates
+            return tss.First().Dates
                 .Where(date => tss.All(ts => ts.ContainsValueAt(date)));
         }
 
@@ -675,64 +700,30 @@ namespace TimeSeriesAnalysis
             return HasValues();
         }
 
-        public TimeSeries GetSimpleMovingAverage(
-            TimeSpan span)
+        public IEnumerable<DateValue> GetSimpleMovingAverage(TimeSpan span)
         {
-            TimeSeries result = new TimeSeries();
-
-            if (HasValues())
-            {
-                List<DateTime> days = TimeCoordinates
-                    .ToList();
-                Values
-                    .ForEach(dv =>
-                    {
-                        DateTime leftDate = dv.Date.Add(-span);
-                        double average = days
-                            .Where(day2 => day2 >= leftDate &&
-                                           day2 <= dv.Date)
-                            .Average(day2 => this[day2]);
-                        result[dv.Date] = average;
-                    });
-            }
-
-            return result;
+            return from dv in Values
+                   let leftDate = dv.Date.Add(-span)
+                   let average = Dates.Where(day2 => day2 >= leftDate &&
+                                                     day2 <= dv.Date)
+                                      .Average(day2 => this[day2])
+                   select new DateValue(dv.Date, average);
         }
-        public TimeSeries GetCenteredMovingAverage(
-            TimeSpan span)
+        public IEnumerable<DateValue> GetCenteredMovingAverage(TimeSpan span)
         {
             return GetCenteredMovingAverage(span.DivideBy(2), span.DivideBy(2));
         }
-        public TimeSeries GetCenteredMovingAverage(
+        public IEnumerable<DateValue> GetCenteredMovingAverage(
             TimeSpan leftSpan,
             TimeSpan rightSpan)
         {
-            TimeSeries result = new TimeSeries();
-
-            if (HasValues())
-            {
-                DateTime firstDate = GetMinimumDate();
-                DateTime lastDate = GetMaximumDate();
-                List<DateTime> days = TimeCoordinates
-                    .ToList();
-                TimeCoordinates
-                    .Where(day => day.Add(-leftSpan) >= firstDate &&
-                                  day.Add(rightSpan) <= lastDate)
-                    .ForEach(day =>
-                    {
-                        DateTime leftDate = day.Add(-leftSpan);
-                        DateTime rightDate = day.Add(rightSpan);
-                        List<double> rangeValues = days
-                            .Where(day2 => day2 >= leftDate &&
-                                           day2 <= rightDate)
-                            .Select(day2 => this[day2])
-                            .ToList();
-                        if (rangeValues.Any())
-                            result[day] = rangeValues.Average();
-                    });
-            }
-
-            return result;
+            return from dv in Values
+                   let leftDate = dv.Date.Add(-leftSpan)
+                   let rightDate = dv.Date.Add(rightSpan)
+                   let average = Dates.Where(date => date >= leftDate &&
+                                                     date <= rightDate)
+                                      .Average(date => this[date])
+                   select new DateValue(dv.Date, average);
         }
         public IEnumerable<DateValue> GetExponentialMovingAverage(
             TimeSpan span,
