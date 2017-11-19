@@ -42,7 +42,37 @@ namespace TestAppProject
             //TestMovingAverages();
             TestMultiColorSeries();
         }
+        private static void TestAutoCorrelation()
+        {
+            double period = 365 / 2.0;
+            DateTime dateTime = new DateTime(2000, 1, 1);
+            DateTime dateTime2 = new DateTime(2000, 12, 31);
+            TimeSeries ts = TimeSeries.CreateDailySinusoidalTimeSeries(1, 2 * Math.PI / period, 0, dateTime, dateTime2);
 
+            CorrelationAnalysisParameters parameters = new CorrelationAnalysisParameters
+            {
+                NumberOfSpansIntheFuture = 10,
+                NumberOfSpansInthePast = 10,
+                Span = TimeSpan.FromDays(1)
+            };
+            IEnumerable<TemporalGapTuple> items = TimeSeriesCorrelation.DoCorrelationAnalysis(ts, ts.Copy(), parameters);
+            FunctionSeries f = new FunctionSeries();
+            items
+                .OrderBy(item => item.TemporalGap)
+                .Select(item => new DataPoint(item.TemporalGap.Days, item.Correlation))
+                .ForEach(dataPoint => f.Points.Add(dataPoint));
+            PlotModel model = new PlotModel();
+            model.Series.Add(f);
+            PlotView view = new PlotView
+            {
+                Dock = DockStyle.Fill,
+                Visible = true,
+                Model = model
+            };
+            Form form = new Form();
+            form.Controls.Add(view);
+            form.ShowDialog();
+        }
         private static void TestMultiColorSeries()
         {
             DateTime firstDate = new DateTime(2000, 1, 1);

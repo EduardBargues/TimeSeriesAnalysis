@@ -67,7 +67,6 @@ namespace TimeSeriesAnalysis
                 firstDate: firstDate,
                 lastDate: lastDate);
         }
-
         public static TimeSeries CreateDailyNormallyRandomSeries(double average, double deviation, DateTime firstDate,
             DateTime lastDate)
         {
@@ -77,7 +76,6 @@ namespace TimeSeriesAnalysis
                 firstDate: firstDate,
                 lastDate: lastDate);
         }
-
         public static TimeSeries CreateDailyTimeSeries(Func<DateTime, double> function, DateTime firstDate, DateTime lastDate)
         {
             Dictionary<DateTime, double> vals = firstDate.GetDaysTo(lastDate)
@@ -634,7 +632,8 @@ namespace TimeSeriesAnalysis
             {
                 MarkerType = info.Marker,
                 Title = info.LegendTitleFunction.Invoke(previousColor),
-                RenderInLegend = true
+                RenderInLegend = true,
+                Color=previousColor
             };
             HashSet<OxyColor> plottedColors = new HashSet<OxyColor>();
             values
@@ -700,14 +699,16 @@ namespace TimeSeriesAnalysis
             return HasValues();
         }
 
+        #region Moving Averages
+
         public IEnumerable<DateValue> GetSimpleMovingAverage(TimeSpan span)
         {
             return from dv in Values
-                   let leftDate = dv.Date.Add(-span)
-                   let average = Dates.Where(day2 => day2 >= leftDate &&
-                                                     day2 <= dv.Date)
-                                      .Average(day2 => this[day2])
-                   select new DateValue(dv.Date, average);
+                let leftDate = dv.Date.Add(-span)
+                let average = Dates.Where(day2 => day2 >= leftDate &&
+                                                  day2 <= dv.Date)
+                    .Average(day2 => this[day2])
+                select new DateValue(dv.Date, average);
         }
         public IEnumerable<DateValue> GetCenteredMovingAverage(TimeSpan span)
         {
@@ -718,12 +719,12 @@ namespace TimeSeriesAnalysis
             TimeSpan rightSpan)
         {
             return from dv in Values
-                   let leftDate = dv.Date.Add(-leftSpan)
-                   let rightDate = dv.Date.Add(rightSpan)
-                   let average = Dates.Where(date => date >= leftDate &&
-                                                     date <= rightDate)
-                                      .Average(date => this[date])
-                   select new DateValue(dv.Date, average);
+                let leftDate = dv.Date.Add(-leftSpan)
+                let rightDate = dv.Date.Add(rightSpan)
+                let average = Dates.Where(date => date >= leftDate &&
+                                                  date <= rightDate)
+                    .Average(date => this[date])
+                select new DateValue(dv.Date, average);
         }
         public IEnumerable<DateValue> GetExponentialMovingAverage(
             TimeSpan span,
@@ -740,5 +741,7 @@ namespace TimeSeriesAnalysis
                 yield return new DateValue(date, value);
             }
         }
+        
+        #endregion
     }
 }

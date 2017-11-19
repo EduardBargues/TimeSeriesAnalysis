@@ -4,15 +4,18 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{94B52089-5070-464C-AD77-42D31A7AFE46}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{A22261B5-E955-4CBA-BB27-63D9D005DB06}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TimeSeriesAnalysis</RootNamespace>
-    <AssemblyName>TimeSeriesAnalysis</AssemblyName>
+    <RootNamespace>TeslaAnalysis</RootNamespace>
+    <AssemblyName>TeslaAnalysis</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +25,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -30,32 +34,44 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EPPlus, Version=4.1.1.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
-      <HintPath>packages\EPPlus.4.1.1\lib\net40\EPPlus.dll</HintPath>
+    <Reference Include="Bitfinex, Version=0.1.16.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\TimeSeriesAnalysis\packages\Bitfinex.0.1.16\lib\net452\Bitfinex.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MathNet.Numerics, Version=3.20.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MathNet.Numerics.3.20.0\lib\net40\MathNet.Numerics.dll</HintPath>
+    <Reference Include="Machine.Specifications, Version=0.11.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\TimeSeriesAnalysis\packages\Machine.Specifications.0.11.0\lib\net45\Machine.Specifications.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Machine.Specifications.Should, Version=0.11.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\TimeSeriesAnalysis\packages\Machine.Specifications.Should.0.11.0\lib\net45\Machine.Specifications.Should.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MoreLinq, Version=2.8.21218.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
-      <HintPath>packages\morelinq.2.8.0\lib\net40\MoreLinq.dll</HintPath>
+      <HintPath>..\TimeSeriesAnalysis\packages\morelinq.2.8.0\lib\net40\MoreLinq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\TimeSeriesAnalysis\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="OxyPlot, Version=2.0.0.0, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
-      <HintPath>packages\OxyPlot.Core.2.0.0-unstable0956\lib\net45\OxyPlot.dll</HintPath>
+      <HintPath>..\TimeSeriesAnalysis\packages\OxyPlot.Core.2.0.0-unstable0956\lib\net45\OxyPlot.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="OxyPlot.WindowsForms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=245eacd6b5d2d338, processorArchitecture=MSIL">
-      <HintPath>packages\OxyPlot.WindowsForms.2.0.0-unstable0956\lib\net45\OxyPlot.WindowsForms.dll</HintPath>
+      <HintPath>..\TimeSeriesAnalysis\packages\OxyPlot.WindowsForms.2.0.0-unstable0956\lib\net45\OxyPlot.WindowsForms.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\TimeSeriesAnalysis\packages\RestSharp.105.2.3\lib\net452\RestSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+      <HintPath>..\TimeSeriesAnalysis\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Windows.Forms" />
@@ -65,38 +81,26 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CorrelationAnalysisParameters.cs" />
-    <Compile Include="DateValue.cs" />
-    <Compile Include="ExtensionsDateValue.cs" />
-    <Compile Include="DecompositionParameters.cs" />
-    <Compile Include="IDateValuesFiller.cs" />
-    <Compile Include="ITimeSeriesPredictor.cs" />
-    <Compile Include="LinearFiller.cs" />
-    <Compile Include="Loess.cs" />
-    <Compile Include="LoessDecompositionParameters.cs" />
-    <Compile Include="MathFunction.cs" />
-    <Compile Include="Plotter.cs" />
+    <Compile Include="Candle.cs" />
+    <Compile Include="CandlePatterns.cs" />
+    <Compile Include="CandleTimeSeries.cs" />
+    <Compile Include="CandleTimeSeriesPlotInfo.cs" />
+    <Compile Include="CandleType.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StlDecompositionParameters.cs" />
-    <Compile Include="TemporalGapGroup.cs" />
-    <Compile Include="TemporalGapTuple.cs" />
-    <Compile Include="TimeSeriesCorrelation.cs" />
-    <Compile Include="TimeSeriesDecomposition.cs" />
-    <Compile Include="TimeSeriesPlotInfo.cs" />
-    <Compile Include="TimeSeriesPredictorAverage.cs" />
-    <Compile Include="TimeSeriesPredictorDrift.cs" />
-    <Compile Include="TimeSeriesPredictorNaive.cs" />
-    <Compile Include="TimeSeries.cs" />
+    <Compile Include="TradingSolver.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Common\Common.csproj">
-      <Project>{ca321526-92bc-4572-a3c7-6b57968b1c3d}</Project>
-      <Name>Common</Name>
+    <ProjectReference Include="..\TimeSeriesAnalysis\TimeSeriesAnalysis.csproj">
+      <Project>{94B52089-5070-464C-AD77-42D31A7AFE46}</Project>
+      <Name>TimeSeriesAnalysis</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

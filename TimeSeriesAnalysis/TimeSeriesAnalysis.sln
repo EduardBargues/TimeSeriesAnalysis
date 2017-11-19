@@ -26,6 +26,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		..\..\asdf\STL_Tin.csv = ..\..\asdf\STL_Tin.csv
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProjectNuget", "..\UnitTestProjectNuget\UnitTestProjectNuget.csproj", "{4FA1F61D-557A-441E-BB1F-4853C8303835}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CandleTimeSeries", "..\TeslaAnalysis\CandleTimeSeries.csproj", "{A22261B5-E955-4CBA-BB27-63D9D005DB06}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +60,14 @@ Global
 		{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E75897D-4DF3-4DA3-B2D1-6F5AD902B3B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

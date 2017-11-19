@@ -1,5 +1,7 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Drawing;
 using OxyPlot;
 using OxyPlot.Series;
 
@@ -150,6 +152,40 @@ namespace TimeSeriesAnalysis
             Title = s.Name;
             Color = OxyColors.Automatic;
             Marker = MarkerType.None;
+        }
+
+        public TimeSeriesPlotInfo()
+        {
+        }
+
+        public static TimeSeriesPlotInfo Create(
+            TimeSeries series = null,
+            Type plotSeriesType = null,
+            Func<DateValue, OxyColor> colorFunction = null,
+            Func<OxyColor, string> legendFunction = null,
+            MarkerType markerType = MarkerType.None,
+            LineStyle lineStyle = LineStyle.None,
+            int plotOrder = 0,
+            string legendTitle = null,
+            OxyColor? color = null
+            )
+        {
+            TimeSeriesPlotInfo result = new TimeSeriesPlotInfo
+            {
+                Series = series,
+                SeriesType = plotSeriesType == null ? typeof(FunctionSeries): plotSeriesType,
+                ColorFunction = colorFunction,
+                LegendTitleFunction = legendFunction,
+                Marker = markerType,
+                LineStyle = lineStyle,
+                Order = plotOrder,
+            };
+            if (colorFunction == null && 
+                color != null)
+                result.Color = color.Value;
+            if (legendFunction == null)
+                result.Title = legendTitle;
+            return result;
         }
     }
 }
