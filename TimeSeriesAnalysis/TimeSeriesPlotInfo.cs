@@ -133,18 +133,19 @@ namespace TimeSeriesAnalysis
             ColorFunction = color;
             Marker = MarkerType.None;
         }
-        public TimeSeriesPlotInfo(
-            TimeSeries s,
-            Func<DateValue, OxyColor> color,
-            Func<OxyColor, string> legendTitles)
+
+        public TimeSeriesPlotInfo(TimeSeries s, Func<OxyColor, string> legendTitles)
         {
             Series = s;
             SeriesType = typeof(FunctionSeries);
             Title = s.Name;
-            ColorFunction = color;
+            ColorFunction = dv => dv.Value >= 0
+                ? OxyColor.FromRgb(255, 0, 0)
+                : OxyColor.FromRgb(0, 0, 255);
             LegendTitleFunction = legendTitles;
             Marker = MarkerType.None;
         }
+
         public TimeSeriesPlotInfo(TimeSeries s)
         {
             Series = s;
@@ -184,7 +185,14 @@ namespace TimeSeriesAnalysis
                 color != null)
                 result.Color = color.Value;
             if (legendFunction == null)
+            {
+                if (legendTitle!=null)
                 result.Title = legendTitle;
+                else
+                    result.Title = series?.Name 
+                        ?? "NO NAME";
+            }
+
             return result;
         }
     }

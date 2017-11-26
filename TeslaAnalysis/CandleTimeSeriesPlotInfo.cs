@@ -21,7 +21,7 @@ namespace TeslaAnalysis
             Color? decreasingColor = null,
             string title = null,
             Color? backgroundColor = null,
-            bool positiveCandlesHollow=true)
+            bool positiveCandlesHollow = true)
         {
             CandleTimeSeriesPlotInfo info = new CandleTimeSeriesPlotInfo
             {
@@ -43,17 +43,6 @@ namespace TeslaAnalysis
                     ? "NO NAME"
                     : alternativeTitle;
             }
-            //if (candleWidth != null)
-            //    info.CandleWidth = candleWidth.Value;
-            //else
-            //{
-            //    if (series != null && 
-            //        series.HasCandles())
-            //    {
-            //        Candle candle = series.Candles.First();
-            //        info.CandleWidth = Axis.ToDouble(candle.Duration);
-            //    }
-            //}
 
             return info;
         }

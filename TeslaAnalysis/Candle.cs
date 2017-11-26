@@ -16,5 +16,6 @@ namespace TeslaAnalysis
         public double Close { get; set; }
         public double BuyVolume { get; set; }
         public double SellVolume { get; set; }
+        public double Volume => BuyVolume + SellVolume;
     }
 }

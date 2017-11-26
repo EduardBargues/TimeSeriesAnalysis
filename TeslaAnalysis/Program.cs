@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -9,13 +10,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
-using Bitfinex;
-using Bitfinex.Models;
 using MoreLinq;
 using OxyPlot;
 using OxyPlot.Series;
 using OxyPlot.WindowsForms;
+using RestSharp.Extensions.MonoHttp;
 using TimeSeriesAnalysis;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace TeslaAnalysis
 {
@@ -23,53 +24,9 @@ namespace TeslaAnalysis
     {
         static void Main(string[] args)
         {
-            //TestTendecyLines();
+            TestTendecyLines();
             //TestBitFinexApi();
-            TestAutoCorrelation();
-        }
-
-        private static void TestAutoCorrelation()
-        {
-            double period = 365 / 2.0;
-            DateTime dateTime = new DateTime(2000, 1, 1);
-            DateTime dateTime2 = new DateTime(2000, 12, 31);
-            TimeSeries ts = TimeSeries.CreateDailySinusoidalTimeSeries(1, 2 * Math.PI / period, 0, dateTime, dateTime2);
-
-            CorrelationAnalysisParameters parameters = new CorrelationAnalysisParameters
-            {
-                NumberOfSpansIntheFuture = 10,
-                NumberOfSpansInthePast = 10,
-                Span = TimeSpan.FromDays(1)
-            };
-            IEnumerable<TemporalGapTuple> items = TimeSeriesCorrelation.DoCorrelationAnalysis(ts, ts.Copy(), parameters);
-            FunctionSeries f = new FunctionSeries();
-            items
-                .OrderBy(item => item.TemporalGap)
-                .Select(item => new DataPoint(item.TemporalGap.Days, item.Correlation))
-                .ForEach(dataPoint => f.Points.Add(dataPoint));
-            PlotModel model = new PlotModel();
-            model.Series.Add(f);
-            PlotView view = new PlotView
-            {
-                Dock = DockStyle.Fill,
-                Visible = true,
-                Model = model
-            };
-            Form form = new Form();
-            form.Controls.Add(view);
-            form.ShowDialog();
-        }
-
-        private static void TestBitFinexApi()
-        {
-            //BitfinexRestClient client = new BitfinexRestClient();
-            //List<ITicker> tickers = client.GetTickers(new string[] { "tBTCUSD" });
-            WebClient webClient = new WebClient();
-            using (webClient)
-            {
-                //webClient.BaseAddress = "http://api.bitcoincharts.com/v1/trades.csv?symbol=bitstampUSD";
-                string downloadString = webClient.DownloadString("http://api.bitcoincharts.com/v1/trades.csv?symbol=bitstampUSD");
-            }
+            //TestTrueFxApi();
         }
 
         private static void TestTendecyLines()
@@ -102,10 +59,12 @@ namespace TeslaAnalysis
             int fastPeriod = 4;
             int mediumPeriod = 12;
             int slowPeriod = 30;
-            TimeSeries fastSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(fastPeriod)).ToTimeSeries($"SMA-{fastPeriod}");
+            TimeSeries fastSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(fastPeriod))
+                .ToTimeSeries($"SMA-{fastPeriod}");
             TimeSeries mediumSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(mediumPeriod))
                 .ToTimeSeries($"SMA-{mediumPeriod}");
-            TimeSeries slowSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(slowPeriod)).ToTimeSeries($"SMA-{slowPeriod}");
+            TimeSeries slowSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(slowPeriod))
+                .ToTimeSeries($"SMA-{slowPeriod}");
             OxyColor colorUp = OxyColor.FromRgb(0, 0, 255);
             OxyColor colorDown = OxyColor.FromRgb(255, 0, 0);
             OxyColor colorRange = OxyColor.FromRgb(0, 0, 0);
@@ -186,4 +145,20 @@ namespace TeslaAnalysis
             return candles;
         }
     }
+
+    public static class UriExtensions
+    {
+        public static Uri AddQuery(this Uri uri, string name, string value)
+        {
+            NameValueCollection httpValueCollection = HttpUtility.ParseQueryString(uri.Query);
+
+            httpValueCollection.Remove(name);
+            httpValueCollection.Add(name, value);
+
+            UriBuilder ub = new UriBuilder(uri) { Query = httpValueCollection.ToString() };
+
+            return ub.Uri;
+        }
+    }
+
 }

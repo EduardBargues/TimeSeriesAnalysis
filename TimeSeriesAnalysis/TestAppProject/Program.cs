@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Windows.Forms;
 using Common;
+using MoreLinq;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
@@ -13,6 +14,7 @@ using OxyPlot.WindowsForms;
 using QuandlCS.Connection;
 using QuandlCS.Requests;
 using QuandlCS.Types;
+using TeslaAnalysis;
 using TimeSeriesAnalysis;
 using DateValue = TimeSeriesAnalysis.DateValue;
 using Plotter = TimeSeriesAnalysis.Plotter;
@@ -26,6 +28,7 @@ namespace TestAppProject
     {
         static void Main(string[] args)
         {
+            ReadTicks();
             //TestAluminum();
             //TestLinearPlusSinus();
             //TestPredictor();
@@ -40,39 +43,59 @@ namespace TestAppProject
             //TestGenericPlotter();
             //TestCorrelationPlot();
             //TestMovingAverages();
-            TestMultiColorSeries();
+            //TestMultiColorSeries();
         }
-        private static void TestAutoCorrelation()
-        {
-            double period = 365 / 2.0;
-            DateTime dateTime = new DateTime(2000, 1, 1);
-            DateTime dateTime2 = new DateTime(2000, 12, 31);
-            TimeSeries ts = TimeSeries.CreateDailySinusoidalTimeSeries(1, 2 * Math.PI / period, 0, dateTime, dateTime2);
 
-            CorrelationAnalysisParameters parameters = new CorrelationAnalysisParameters
-            {
-                NumberOfSpansIntheFuture = 10,
-                NumberOfSpansInthePast = 10,
-                Span = TimeSpan.FromDays(1)
-            };
-            IEnumerable<TemporalGapTuple> items = TimeSeriesCorrelation.DoCorrelationAnalysis(ts, ts.Copy(), parameters);
-            FunctionSeries f = new FunctionSeries();
-            items
-                .OrderBy(item => item.TemporalGap)
-                .Select(item => new DataPoint(item.TemporalGap.Days, item.Correlation))
-                .ForEach(dataPoint => f.Points.Add(dataPoint));
-            PlotModel model = new PlotModel();
-            model.Series.Add(f);
-            PlotView view = new PlotView
-            {
-                Dock = DockStyle.Fill,
-                Visible = true,
-                Model = model
-            };
-            Form form = new Form();
-            form.Controls.Add(view);
-            form.ShowDialog();
+        private static void ReadTicks()
+        {
+            string destinyPath = @"C:\Users\EBJ\Desktop\BitCoinData\BitCoinDataByDay";
+            Directory.Delete(destinyPath);
+            Directory.CreateDirectory(destinyPath);
+
+            string path = @"C:\Users\EBJ\Desktop\BitCoinData";
+            Directory.GetFiles(path)
+                .Select(fileName => new FileInfo(fileName))
+                .Where(file => file.Extension == "csv")
+                .SelectMany(ReadFile)
+                .DistinctBy(trade => trade.Date)
+                .GroupBy(trade => trade.Date.Date)
+                .ForEach(grouping => WriteData(grouping.Key, grouping, destinyPath));
         }
+
+        private static void WriteData(DateTime day, IEnumerable<Trade> trades, string path)
+        {
+            string fileName = $"BitCoin {day.Year}-{day.Month}-{day.Day}.csv";
+            string fullFileName = Path.Combine(path, fileName);
+            using (TextWriter tw = new StreamWriter(fullFileName))
+            {
+                tw.WriteLine("Date; Volume; Price; Type");
+                foreach (Trade trade in trades.OrderBy(trade => trade.Date))
+                    tw.WriteLine(trade.ToString());
+                tw.Flush();
+                tw.Close();
+            }
+        }
+
+        private static IEnumerable<Trade> ReadFile(FileInfo file)
+        {
+            DateTime initialDate = new DateTime(1970, 1, 1);
+            string[] lines = File.ReadAllLines(file.FullName);
+            for (int lineHandle = 1; lineHandle < lines.Length; lineHandle++)
+            {
+                List<double> values = lines[lineHandle]
+                    .Split(';')
+                    .Select(word => double.Parse(word, CultureInfo.InvariantCulture))
+                    .ToList();
+                yield return new Trade
+                {
+                    Date = initialDate.AddMilliseconds(values[0]),
+                    Volume = values[1],
+                    Price = values[2],
+                    Type = values[1] > 0 ? TradeType.Buy : TradeType.Sell
+                };
+            }
+        }
+
         private static void TestMultiColorSeries()
         {
             DateTime firstDate = new DateTime(2000, 1, 1);
@@ -80,22 +103,22 @@ namespace TestAppProject
             TimeSeries random = TimeSeries.CreateDailyNormallyRandomSeries(0, 10, firstDate, lastDate);
             TimeSeries sinus = TimeSeries.CreateDailySinusoidalTimeSeries(100, 2 * Math.PI / 365, 0, firstDate, lastDate);
             TimeSeries sum = sinus.Sum(random);
-            TimeSeries.Plot(
-                new TimeSeriesPlotInfo(sum,
-                    dv => dv.Value >= 0
-                        ? OxyColor.FromRgb(255, 0, 0)
-                        : OxyColor.FromRgb(0, 0, 255),
-                    color => color == OxyColor.FromRgb(255, 0, 0)
-                        ? "T(t)>=0"
-                        : "T(t)<0"
-                ));
+
+            Func<DateValue, OxyColor> colorFunction = dv => dv.Value >= 0
+                ? OxyColor.FromRgb(255, 0, 0)
+                : OxyColor.FromRgb(0, 0, 255);
+            Func<OxyColor, string> legendColor = color => color == OxyColor.FromRgb(255, 0, 0)
+                ? "T(t)>=0"
+                : "T(t)<0";
+            TimeSeriesPlotInfo info = TimeSeriesPlotInfo.Create(series: sum, colorFunction: colorFunction, legendFunction: legendColor);
+            TimeSeries.Plot(info);
         }
 
         private static void TestMovingAverages()
         {
             DateTime firstDate = new DateTime(2000, 1, 1);
             DateTime lastDate = new DateTime(2000, 12, 31);
-            TimeSeries random = TimeSeries.CreateDailyNormallyRandomSeries(0, 100, firstDate, lastDate);
+            TimeSeries random = TimeSeries.CreateDailyNormallyRandomSeries(0, 10, firstDate, lastDate);
             TimeSeries sinus = TimeSeries.CreateDailySinusoidalTimeSeries(100, 2 * Math.PI / 365, 0, firstDate, lastDate);
             TimeSeries sum = sinus.Sum(random);
             sum.Name = "Series";

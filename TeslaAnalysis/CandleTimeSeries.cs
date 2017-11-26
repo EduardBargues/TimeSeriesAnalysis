@@ -9,6 +9,7 @@ using OxyPlot.Axes;
 using OxyPlot.WindowsForms;
 using TimeSeriesAnalysis;
 using System.Windows.Forms;
+using Common;
 using OxyPlot.Series;
 
 namespace TeslaAnalysis
@@ -127,5 +128,123 @@ namespace TeslaAnalysis
             return series;
         }
 
+        public static IEnumerable<Candle> FromTrades(
+            IEnumerable<Trade> trades,
+            TimeSpan? candleDuration = null,
+            int? numberOfTradesPerCandle = null,
+            double? volumePerCandle = null)
+        {
+            if (candleDuration == null &&
+                numberOfTradesPerCandle == null &&
+                volumePerCandle == null)
+                return new List<Candle>();
+
+            if (candleDuration != null)
+                return GetCandleTimeSeries(trades, candleDuration.Value);
+            if (numberOfTradesPerCandle != null)
+                return GetCandleTimeSeries(trades, numberOfTradesPerCandle.Value);
+
+            return GetCandleTimeSeries(trades, volumePerCandle.Value);
+        }
+        private static IEnumerable<Candle> GetCandleTimeSeries(IEnumerable<Trade> trades, double volumePerCandle)
+        {
+            List<Trade> sortedTrades = trades
+                .OrderBy(trade => trade.Date)
+                .ToList();
+            if (sortedTrades.Any())
+            {
+                Trade firstTrade = sortedTrades.First();
+                Candle candle = new Candle { StartDate = firstTrade.Date };
+                foreach (Trade trade in sortedTrades)
+                {
+                    if (trade.Type == TradeType.Buy)
+                        candle.BuyVolume += trade.Volume;
+                    if (trade.Type == TradeType.Sell)
+                        candle.SellVolume += trade.Volume;
+                    if (candle.High < trade.Price)
+                        candle.High = trade.Price;
+                    if (candle.Low > trade.Price)
+                        candle.Low = trade.Price;
+                    if (candle.Volume >= volumePerCandle)
+                    {
+                        candle.Duration = trade.Date - candle.StartDate;
+                        candle.Close = trade.Price;
+                        yield return candle;
+                        candle = new Candle { StartDate = trade.Date };
+                    }
+                }
+            }
+        }
+        private static IEnumerable<Candle> GetCandleTimeSeries(IEnumerable<Trade> trades, int numberOfTradesPerCandle)
+        {
+            return trades
+                .OrderBy(trade => trade.Date)
+                .Select((trade, index) => new { Trade = trade, Position = index + 1 })
+                .GroupBy(anonymous => anonymous.Position / numberOfTradesPerCandle, anonymous => anonymous.Trade)
+                .Select(grouping =>
+                {
+                    Candle candle = GetCandleFromTrades(grouping);
+                    Trade firstTrade = grouping.First();
+                    candle.StartDate = firstTrade.Date;
+                    candle.Duration = grouping.Last().Date - firstTrade.Date;
+                    return candle;
+                });
+        }
+        private static IEnumerable<Candle> GetCandleTimeSeries(IEnumerable<Trade> trades, TimeSpan candleDuration)
+        {
+            List<Trade> sortedTrades = trades
+                .OrderBy(trade => trade.Date)
+                .ToList();
+            if (sortedTrades.Any())
+            {
+                DateTime firstDate = sortedTrades.First().Date;
+                Func<Trade, int> f = t =>
+                {
+                    DateTime date = t.Date;
+                    TimeSpan span = date - firstDate;
+                    double factor = span.DivideBy(candleDuration);
+                    return (int)factor;
+                };
+                foreach (IGrouping<int, Trade> grouping in sortedTrades.GroupBy(trade => f.Invoke(trade)))
+                {
+                    Candle candle = GetCandleFromTrades(grouping);
+                    Trade firstTrade = grouping.First();
+                    int scale = f.Invoke(firstTrade);
+                    candle.StartDate = firstDate + candleDuration.MultiplyBy(scale);
+                    candle.Duration = candleDuration;
+                    yield return candle;
+                }
+            }
+        }
+        private static Candle GetCandleFromTrades(IEnumerable<Trade> trades)
+        {
+            List<Trade> list = trades
+                .ToList();
+
+            Candle candle = new Candle
+            {
+                High = list
+                    .Max(trade => trade.Price),
+                Open = list.First().Price,
+                Low = list
+                    .Min(trade => trade.Price),
+                Close = list.Last().Price,
+                SellVolume = list
+                    .Where(trade => trade.Type == TradeType.Sell)
+                    .Sum(trade => trade.Volume),
+                BuyVolume = list
+                    .Where(trade => trade.Type == TradeType.Buy)
+                    .Sum(trade => trade.Volume)
+            };
+
+            return candle;
+        }
+    }
+
+    public enum TradeCandleTransformation
+    {
+        TemporalSpan,
+        TradeQuantity,
+        TradeVolume,
     }
 }
