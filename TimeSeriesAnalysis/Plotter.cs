@@ -6,29 +6,28 @@ using System.Windows.Forms;
 using MoreLinq;
 using OxyPlot;
 using OxyPlot.Series;
-using OxyPlot.WindowsForms;
 
 namespace TimeSeriesAnalysis
 {
     public static class Plotter
     {
-        public static PlotView GetPlotView(params Series[] series)
-        {
-            PlotModel model = new PlotModel();
-            series.ForEach(s => model.Series.Add(s));
+        //public static PlotView GetPlotView(params Series[] series)
+        //{
+        //    PlotModel model = new PlotModel();
+        //    series.ForEach(s => model.Series.Add(s));
 
-            return new PlotView()
-            {
-                Model = model,
-                Dock = DockStyle.Fill,
-            };
-        }
+        //    return new PlotView()
+        //    {
+        //        Model = model,
+        //        Dock = DockStyle.Fill,
+        //    };
+        //}
 
         public static void Plot(params Series[] series)
         {
-            PlotView plotView = GetPlotView(series);
+            //PlotView plotView = GetPlotView(series);
             Form form = new Form();
-            form.Controls.Add(plotView);
+            //form.Controls.Add(plotView);
             form.ShowDialog();
         }
         public static DataPointSeries GetDataPointSeries(params object[] parameters)

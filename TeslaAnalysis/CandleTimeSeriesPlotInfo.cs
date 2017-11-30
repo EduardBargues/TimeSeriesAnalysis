@@ -1,7 +1,4 @@
 ﻿using System.Drawing;
-using System.Linq;
-using OxyPlot;
-using OxyPlot.Axes;
 
 namespace TeslaAnalysis
 {

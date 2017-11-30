@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Mime;
 using System.Windows.Forms;
@@ -28,7 +29,6 @@ namespace TestAppProject
     {
         static void Main(string[] args)
         {
-            ReadTicks();
             //TestAluminum();
             //TestLinearPlusSinus();
             //TestPredictor();
@@ -44,22 +44,78 @@ namespace TestAppProject
             //TestCorrelationPlot();
             //TestMovingAverages();
             //TestMultiColorSeries();
+            FromWebDataToData();
+            //FromDailyDataToCandleData();
         }
 
-        private static void ReadTicks()
+        private static void FromWebDataToData()
         {
-            string destinyPath = @"C:\Users\EBJ\Desktop\BitCoinData\BitCoinDataByDay";
-            Directory.Delete(destinyPath);
-            Directory.CreateDirectory(destinyPath);
-
-            string path = @"C:\Users\EBJ\Desktop\BitCoinData";
-            Directory.GetFiles(path)
+            string path = @"D:\Dropbox\Llibertat Financera\Analisis\0002-BitCoin\BitCoinWebData";
+            string destinationFileName = @"D:\Dropbox\Llibertat Financera\Analisis\0002-BitCoin\BitCoinTradeData\BitCoinHistoricalTradeDate.csv";
+            string zipFileName = @"D:\Dropbox\Llibertat Financera\Analisis\0002-BitCoin\BitCoinTradeData\BitCoinHistoricalTradeDate.7z";
+            List<Trade> trades = Directory.GetFiles(path)
                 .Select(fileName => new FileInfo(fileName))
-                .Where(file => file.Extension == "csv")
+                .Where(file => file.Extension == ".csv")
                 .SelectMany(ReadFile)
-                .DistinctBy(trade => trade.Date)
-                .GroupBy(trade => trade.Date.Date)
-                .ForEach(grouping => WriteData(grouping.Key, grouping, destinyPath));
+                .DistinctBy(trade => new { trade.Instant, trade.Price, trade.Volume, trade.Type })
+                .ToList();
+            File.Delete(destinationFileName);
+            using (TextWriter tw = new StreamWriter(destinationFileName))
+            {
+                tw.WriteLine("Date; Volume; Price; Type");
+                foreach (Trade trade in trades)
+                    tw.WriteLine(trade.ToText(CultureInfo.InvariantCulture));
+                tw.Flush();
+                tw.Close();
+            }
+        }
+
+        private static Candle GetDailyCandle(IGrouping<DateTime, Trade> grouping)
+        {
+            return new Candle()
+            {
+                SellVolume = grouping
+                    .Where(trade => trade.Type == TradeType.Sell)
+                    .Sum(trade => trade.Volume),
+                BuyVolume = grouping
+                    .Where(trade => trade.Type == TradeType.Buy)
+                    .Sum(trade => trade.Volume),
+                Close = grouping.Last().Price,
+                Duration = TimeSpan.FromDays(1),
+                High = grouping.Max(trade => trade.Price),
+                Low = grouping.Min(trade => trade.Price),
+                Open = grouping.First().Price,
+                StartDate = grouping.Key,
+            };
+        }
+
+        private static IEnumerable<Trade> GetTrades()
+        {
+            string path = @"D:\Dropbox\Llibertat Financera\Analisis\0002-BitCoin\BitCoinTradeData";
+            string fileName = Directory.GetFiles(path).FirstOrDefault();
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                string[] lines = File.ReadAllLines(fileName);
+                for (int lineHandle = 1; lineHandle < lines.Length; lineHandle++)
+                {
+                    Trade trade = new Trade();
+                    lines[lineHandle]
+                        .Split(';')
+                        .ForEach((word, index) =>
+                        {
+                            if (index == 0)
+                                trade.Instant = DateTime.ParseExact(word, "yyyy/MM/dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
+                            if (index == 1)
+                                trade.Volume = double.Parse(word, CultureInfo.InvariantCulture);
+                            if (index == 2)
+                                trade.Price = double.Parse(word, CultureInfo.InvariantCulture);
+                            if (index == 3 &&
+                                Enum.TryParse(word, true, out TradeType type))
+                                trade.Type = type;
+                        });
+                    yield return trade;
+                }
+            }
         }
 
         private static void WriteData(DateTime day, IEnumerable<Trade> trades, string path)
@@ -69,7 +125,7 @@ namespace TestAppProject
             using (TextWriter tw = new StreamWriter(fullFileName))
             {
                 tw.WriteLine("Date; Volume; Price; Type");
-                foreach (Trade trade in trades.OrderBy(trade => trade.Date))
+                foreach (Trade trade in trades.OrderBy(trade => trade.Instant))
                     tw.WriteLine(trade.ToString());
                 tw.Flush();
                 tw.Close();
@@ -84,11 +140,11 @@ namespace TestAppProject
             {
                 List<double> values = lines[lineHandle]
                     .Split(';')
-                    .Select(word => double.Parse(word, CultureInfo.InvariantCulture))
+                    .Select(word => double.Parse(word, CultureInfo.CurrentCulture))
                     .ToList();
                 yield return new Trade
                 {
-                    Date = initialDate.AddMilliseconds(values[0]),
+                    Instant = initialDate.AddMilliseconds(values[0]),
                     Volume = values[1],
                     Price = values[2],
                     Type = values[1] > 0 ? TradeType.Buy : TradeType.Sell

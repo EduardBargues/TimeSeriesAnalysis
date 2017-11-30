@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MoreLinq;
-using OxyPlot;
-using OxyPlot.Axes;
-using OxyPlot.WindowsForms;
-using TimeSeriesAnalysis;
 using System.Windows.Forms;
 using Common;
+using OxyPlot;
+using OxyPlot.Axes;
 using OxyPlot.Series;
+using OxyPlot.WindowsForms;
 
 namespace TeslaAnalysis
 {
@@ -45,14 +41,8 @@ namespace TeslaAnalysis
         }
         public Candle this[DateTime date]
         {
-            get
-            {
-                return GetValue(date);
-            }
-            set
-            {
-                SetCandle(date, value);
-            }
+            get => GetValue(date);
+            set => SetCandle(date, value);
         }
         public bool ContainsValueAt(DateTime date)
         {
@@ -64,6 +54,15 @@ namespace TeslaAnalysis
         }
 
         public static void Plot(CandleTimeSeriesPlotInfo info)
+        {
+            PlotView view = GetPlotView(info);
+
+            Form form = new Form();
+            form.Controls.Add(view);
+            form.ShowDialog();
+        }
+
+        public static PlotView GetPlotView(CandleTimeSeriesPlotInfo info)
         {
             List<HighLowItem> items = info.Series.Candles
                 .OrderBy(candle => candle.StartDate)
@@ -117,11 +116,9 @@ namespace TeslaAnalysis
                 Model = model,
                 Dock = DockStyle.Fill,
             };
-
-            Form form = new Form();
-            form.Controls.Add(view);
-            form.ShowDialog();
+            return view;
         }
+
         public static CandleTimeSeries Create(IEnumerable<Candle> candles)
         {
             CandleTimeSeries series = new CandleTimeSeries(candles);
@@ -149,12 +146,12 @@ namespace TeslaAnalysis
         private static IEnumerable<Candle> GetCandleTimeSeries(IEnumerable<Trade> trades, double volumePerCandle)
         {
             List<Trade> sortedTrades = trades
-                .OrderBy(trade => trade.Date)
+                .OrderBy(trade => trade.Instant)
                 .ToList();
             if (sortedTrades.Any())
             {
                 Trade firstTrade = sortedTrades.First();
-                Candle candle = new Candle { StartDate = firstTrade.Date };
+                Candle candle = new Candle { StartDate = firstTrade.Instant };
                 foreach (Trade trade in sortedTrades)
                 {
                     if (trade.Type == TradeType.Buy)
@@ -167,10 +164,10 @@ namespace TeslaAnalysis
                         candle.Low = trade.Price;
                     if (candle.Volume >= volumePerCandle)
                     {
-                        candle.Duration = trade.Date - candle.StartDate;
+                        candle.Duration = trade.Instant - candle.StartDate;
                         candle.Close = trade.Price;
                         yield return candle;
-                        candle = new Candle { StartDate = trade.Date };
+                        candle = new Candle { StartDate = trade.Instant };
                     }
                 }
             }
@@ -178,29 +175,29 @@ namespace TeslaAnalysis
         private static IEnumerable<Candle> GetCandleTimeSeries(IEnumerable<Trade> trades, int numberOfTradesPerCandle)
         {
             return trades
-                .OrderBy(trade => trade.Date)
+                .OrderBy(trade => trade.Instant)
                 .Select((trade, index) => new { Trade = trade, Position = index + 1 })
                 .GroupBy(anonymous => anonymous.Position / numberOfTradesPerCandle, anonymous => anonymous.Trade)
                 .Select(grouping =>
                 {
                     Candle candle = GetCandleFromTrades(grouping);
                     Trade firstTrade = grouping.First();
-                    candle.StartDate = firstTrade.Date;
-                    candle.Duration = grouping.Last().Date - firstTrade.Date;
+                    candle.StartDate = firstTrade.Instant;
+                    candle.Duration = grouping.Last().Instant - firstTrade.Instant;
                     return candle;
                 });
         }
         private static IEnumerable<Candle> GetCandleTimeSeries(IEnumerable<Trade> trades, TimeSpan candleDuration)
         {
             List<Trade> sortedTrades = trades
-                .OrderBy(trade => trade.Date)
+                .OrderBy(trade => trade.Instant)
                 .ToList();
             if (sortedTrades.Any())
             {
-                DateTime firstDate = sortedTrades.First().Date;
+                DateTime firstDate = sortedTrades.First().Instant;
                 Func<Trade, int> f = t =>
                 {
-                    DateTime date = t.Date;
+                    DateTime date = t.Instant;
                     TimeSpan span = date - firstDate;
                     double factor = span.DivideBy(candleDuration);
                     return (int)factor;
@@ -239,6 +236,21 @@ namespace TeslaAnalysis
 
             return candle;
         }
+
+        public DateTime? GetMinDate()
+        {
+            return candlesByDate.Keys.Any()
+                ? (DateTime?)candlesByDate.Keys.Min()
+                : null;
+        }
+
+        public DateTime? GetMaxDate()
+        {
+            return candlesByDate.Keys.Any()
+                ? (DateTime?)candlesByDate.Keys.Max()
+                : null;
+        }
+
     }
 
     public enum TradeCandleTransformation
