@@ -9,46 +9,31 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using OxyPlot.WindowsForms;
 using TeslaAnalysis;
+using TimeSeriesAnalysis;
 
 namespace DashBoard
 {
-    public partial class HistoryCtl : UserControl
+    public partial class HistoryCtl : UserControl, IHistoryView
     {
+        public event Action LoadDataRequest;
+
         public HistoryCtl()
         {
             InitializeComponent();
+            dateTimePickerFrom.Value = new DateTime(2017, 1, 1);
+            buttonRefresh.Click += (a, b) => LoadDataRequest?.Invoke();
+            numericUpDownDxPeriod.Value = 14;
+            numericUpDownAdxSmoothingPeriod.Value = 14;
         }
 
-        private CandleTimeSeries series;
-        private DateTime minDate => dateTimePickerFrom.Value;
-        private DateTime maxDate => dateTimePickerTo.Value;
+        public DateTime StartDate => dateTimePickerFrom.Value;
+        public DateTime EndDate => dateTimePickerTo.Value;
+        public TimeSpan IndicatorPeriod => TimeSpan.FromDays((int)numericUpDownDxPeriod.Value);
+        public TimeSpan SmoothingPeriod => TimeSpan.FromDays((int)numericUpDownAdxSmoothingPeriod.Value);
 
-        public void LoadSeries(CandleTimeSeries candleTimeSeries)
+        public void LoadData(CandleTimeSeries series, IEnumerable<(TimeSeries, Color)> indicators)
         {
-            this.series = candleTimeSeries;
-
-            DateTime? min = candleTimeSeries.GetMinDate();
-            if (min != null)
-                dateTimePickerFrom.Value = min.Value;
-            DateTime? max = candleTimeSeries.GetMaxDate();
-            if (max != null)
-                dateTimePickerTo.Value = max.Value;
-            RefreshPlot();
-        }
-
-        private void RefreshPlot()
-        {
-            CandleTimeSeries candleTimeSeries = series.Candles
-                .Where(candle => candle.StartDate >= minDate && candle.StartDate <= maxDate)
-                .ToCandleTimeSeries("SERIES");
-            PlotView plotView = CandleTimeSeries.GetPlotView(CandleTimeSeriesPlotInfo.Create(series:candleTimeSeries));
-            panel.Controls.Clear();
-            panel.Controls.Add(plotView);
-        }
-
-        private void buttonRefresh_Click(object sender, EventArgs e)
-        {
-            RefreshPlot();
+            seriesIndicatorCtl.LoadData(series, indicators);
         }
     }
 }

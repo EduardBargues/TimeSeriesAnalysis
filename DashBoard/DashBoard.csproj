@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,8 +33,12 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MoreLinq, Version=2.8.21218.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
+      <HintPath>..\TimeSeriesAnalysis\packages\morelinq.2.8.0\lib\net40\MoreLinq.dll</HintPath>
+    </Reference>
     <Reference Include="OxyPlot, Version=1.0.0.0, Culture=neutral, PublicKeyToken=638079a8f0bd61e9, processorArchitecture=MSIL">
       <HintPath>..\TimeSeriesAnalysis\packages\OxyPlot.Core.1.0.0\lib\net45\OxyPlot.dll</HintPath>
     </Reference>
@@ -42,6 +47,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\TimeSeriesAnalysis\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -53,6 +61,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Context.cs" />
+    <Compile Include="DailyCtl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DailyCtl.Designer.cs">
+      <DependentUpon>DailyCtl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DailyPresenter.cs" />
+    <Compile Include="DatabaseConnector.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -65,8 +82,26 @@
     <Compile Include="HistoryCtl.Designer.cs">
       <DependentUpon>HistoryCtl.cs</DependentUpon>
     </Compile>
+    <Compile Include="HistoryPresenter.cs" />
+    <Compile Include="MainPresenter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SeriesIndicatorCtl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SeriesIndicatorCtl.Designer.cs">
+      <DependentUpon>SeriesIndicatorCtl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StatisticsCtl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StatisticsCtl.Designer.cs">
+      <DependentUpon>StatisticsCtl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StatisticsPresenter.cs" />
+    <EmbeddedResource Include="DailyCtl.resx">
+      <DependentUpon>DailyCtl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -82,6 +117,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="SeriesIndicatorCtl.resx">
+      <DependentUpon>SeriesIndicatorCtl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StatisticsCtl.resx">
+      <DependentUpon>StatisticsCtl.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -104,6 +145,10 @@
     <ProjectReference Include="..\TimeSeriesAnalysis\Common\Common.csproj">
       <Project>{ca321526-92bc-4572-a3c7-6b57968b1c3d}</Project>
       <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TimeSeriesAnalysis\TimeSeriesAnalysis.csproj">
+      <Project>{94b52089-5070-464c-ad77-42d31a7afe46}</Project>
+      <Name>TimeSeriesAnalysis</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

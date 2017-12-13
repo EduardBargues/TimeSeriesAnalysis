@@ -309,7 +309,7 @@ namespace TimeSeriesAnalysis
                 TimeSpan correctedSeasonalPeriod = seasonalPeriod - step;
                 DateTime firstDateInterval = firstDate;
                 DateTime firstDatePlus1SeasonalPeriod = tseries.GetNextSpanDate(firstDateInterval, correctedSeasonalPeriod);
-                DateTime lastDateInterval = ExtensionsDateTime.GetMinDate(firstDatePlus1SeasonalPeriod, lastDate);
+                DateTime lastDateInterval = ExtensionsDateTime.Min(firstDatePlus1SeasonalPeriod, lastDate);
                 while (firstDateInterval < lastDateInterval)
                 {
                     ExtensionsDateTime.GetDatesTo(firstDateInterval, lastDateInterval, step)
@@ -318,7 +318,7 @@ namespace TimeSeriesAnalysis
 
                     firstDateInterval = lastDateInterval.Add(step);
                     firstDatePlus1SeasonalPeriod = tseries.GetNextSpanDate(firstDateInterval, correctedSeasonalPeriod);
-                    lastDateInterval = ExtensionsDateTime.GetMinDate(firstDatePlus1SeasonalPeriod, lastDate);
+                    lastDateInterval = ExtensionsDateTime.Min(firstDatePlus1SeasonalPeriod, lastDate);
                     groupLabel = 1;
                 }
             }

@@ -23,7 +23,7 @@ namespace TeslaAnalysis
         { }
         public CandleTimeSeries(IEnumerable<Candle> candles)
         {
-            candlesByDate = candles.ToDictionary(candle => candle.StartDate);
+            candlesByDate = candles.ToDictionary(candle => candle.Start);
         }
         public void SetCandle(DateTime date, Candle candle)
         {
@@ -62,17 +62,17 @@ namespace TeslaAnalysis
             form.ShowDialog();
         }
 
-        public static PlotView GetPlotView(CandleTimeSeriesPlotInfo info)
+        public static PlotView GetPlotView(CandleTimeSeriesPlotInfo info, Action<object, AxisChangedEventArgs> onAxisChangedMethod = null)
         {
             List<HighLowItem> items = info.Series.Candles
-                .OrderBy(candle => candle.StartDate)
+                .OrderBy(candle => candle.Start)
                 .Select(candle => new HighLowItem()
                 {
-                    X = DateTimeAxis.ToDouble(candle.StartDate),
+                    X = DateTimeAxis.ToDouble(candle.Start),
                     Open = candle.Open,
                     Close = candle.Close,
-                    High = candle.High,
-                    Low = candle.Low,
+                    High = candle.Max,
+                    Low = candle.Min,
                 })
                 .ToList();
             CandleStickSeries series = new CandleStickSeries
@@ -108,6 +108,8 @@ namespace TeslaAnalysis
             PlotModel model = new PlotModel();
             model.Axes.Clear();
             DateTimeAxis timeAxis = new DateTimeAxis();
+            if (onAxisChangedMethod != null)
+                timeAxis.AxisChanged += onAxisChangedMethod.Invoke;
             model.Axes.Add(timeAxis);
             model.Series.Clear();
             model.Series.Add(series);
@@ -151,23 +153,23 @@ namespace TeslaAnalysis
             if (sortedTrades.Any())
             {
                 Trade firstTrade = sortedTrades.First();
-                Candle candle = new Candle { StartDate = firstTrade.Instant };
+                Candle candle = new Candle { Start = firstTrade.Instant };
                 foreach (Trade trade in sortedTrades)
                 {
                     if (trade.Type == TradeType.Buy)
                         candle.BuyVolume += trade.Volume;
                     if (trade.Type == TradeType.Sell)
                         candle.SellVolume += trade.Volume;
-                    if (candle.High < trade.Price)
-                        candle.High = trade.Price;
-                    if (candle.Low > trade.Price)
-                        candle.Low = trade.Price;
+                    if (candle.Max < trade.Price)
+                        candle.Max = trade.Price;
+                    if (candle.Min > trade.Price)
+                        candle.Min = trade.Price;
                     if (candle.Volume >= volumePerCandle)
                     {
-                        candle.Duration = trade.Instant - candle.StartDate;
+                        candle.Duration = trade.Instant - candle.Start;
                         candle.Close = trade.Price;
                         yield return candle;
-                        candle = new Candle { StartDate = trade.Instant };
+                        candle = new Candle { Start = trade.Instant };
                     }
                 }
             }
@@ -182,7 +184,7 @@ namespace TeslaAnalysis
                 {
                     Candle candle = GetCandleFromTrades(grouping);
                     Trade firstTrade = grouping.First();
-                    candle.StartDate = firstTrade.Instant;
+                    candle.Start = firstTrade.Instant;
                     candle.Duration = grouping.Last().Instant - firstTrade.Instant;
                     return candle;
                 });
@@ -207,7 +209,7 @@ namespace TeslaAnalysis
                     Candle candle = GetCandleFromTrades(grouping);
                     Trade firstTrade = grouping.First();
                     int scale = f.Invoke(firstTrade);
-                    candle.StartDate = firstDate + candleDuration.MultiplyBy(scale);
+                    candle.Start = firstDate + candleDuration.MultiplyBy(scale);
                     candle.Duration = candleDuration;
                     yield return candle;
                 }
@@ -220,10 +222,10 @@ namespace TeslaAnalysis
 
             Candle candle = new Candle
             {
-                High = list
+                Max = list
                     .Max(trade => trade.Price),
                 Open = list.First().Price,
-                Low = list
+                Min = list
                     .Min(trade => trade.Price),
                 Close = list.Last().Price,
                 SellVolume = list

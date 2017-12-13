@@ -7,6 +7,7 @@ using System.Linq;
 using System.Web;
 using OxyPlot;
 using TimeSeriesAnalysis;
+using Color = System.Drawing.Color;
 
 namespace TeslaAnalysis
 {
@@ -14,8 +15,7 @@ namespace TeslaAnalysis
     {
         static void Main(string[] args)
         {
-            TestTendecyLines();
-            //TestBitFinexApi();
+            //TestTendecyLines();
             //TestTrueFxApi();
         }
 
@@ -23,15 +23,15 @@ namespace TeslaAnalysis
         {
             // read and plot
             List<Candle> candles = ReadFile();
-            TimeSeries tsOpen = new TimeSeries(candles.ToDictionary(candle => candle.StartDate, candle => candle.Open));
+            TimeSeries tsOpen = new TimeSeries(candles.ToDictionary(candle => candle.Start, candle => candle.Open));
             tsOpen.Name = "Open";
-            TimeSeries tsClose = new TimeSeries(candles.ToDictionary(candle => candle.StartDate, candle => candle.Close));
+            TimeSeries tsClose = new TimeSeries(candles.ToDictionary(candle => candle.Start, candle => candle.Close));
             tsClose.Name = "Close";
-            TimeSeries tsHigh = new TimeSeries(candles.ToDictionary(candle => candle.StartDate, candle => candle.High));
+            TimeSeries tsHigh = new TimeSeries(candles.ToDictionary(candle => candle.Start, candle => candle.Max));
             tsHigh.Name = "High";
-            TimeSeries tsLow = new TimeSeries(candles.ToDictionary(candle => candle.StartDate, candle => candle.Low));
+            TimeSeries tsLow = new TimeSeries(candles.ToDictionary(candle => candle.Start, candle => candle.Min));
             tsLow.Name = "Low";
-            TimeSeries tsVolume = new TimeSeries(candles.ToDictionary(candle => candle.StartDate, candle => candle.BuyVolume));
+            TimeSeries tsVolume = new TimeSeries(candles.ToDictionary(candle => candle.Start, candle => candle.BuyVolume));
             tsVolume.Name = "Volume";
             CandleTimeSeries tsCandles = CandleTimeSeries.Create(candles);
             tsCandles.Name = "Candles";
@@ -41,8 +41,8 @@ namespace TeslaAnalysis
             TimeSeries tendencyPeriods = tsOpen.Values.GetTendencyLines(50)
                 .ToTimeSeries("TendencyPeriods");
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(tsOpen, OxyColor.FromRgb(255, 0, 0)),
-                new TimeSeriesPlotInfo(tendencyPeriods, OxyColor.FromRgb(0, 0, 255))
+                TimeSeriesPlotInfo.Create(tsOpen, color: Color.Red),
+                TimeSeriesPlotInfo.Create(tendencyPeriods, color: Color.Blue)
             );
 
             // método medias móviles
@@ -55,11 +55,12 @@ namespace TeslaAnalysis
                 .ToTimeSeries($"SMA-{mediumPeriod}");
             TimeSeries slowSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(slowPeriod))
                 .ToTimeSeries($"SMA-{slowPeriod}");
-            OxyColor colorUp = OxyColor.FromRgb(0, 0, 255);
-            OxyColor colorDown = OxyColor.FromRgb(255, 0, 0);
-            OxyColor colorRange = OxyColor.FromRgb(0, 0, 0);
-            OxyColor colorSeries = OxyColor.FromRgb(0, 255, 0);
-            Func<OxyColor, string> legendSeparator = color =>
+            Color colorUp = Color.Blue;
+            Color colorDown = Color.Red;
+            Color colorRange = Color.Black;
+            Color colorSeries = Color.Green;
+
+            string LegendSeparator(Color color)
             {
                 string result;
                 if (color == colorUp)
@@ -69,30 +70,30 @@ namespace TeslaAnalysis
                 else
                     result = "Range";
                 return result;
-            };
-            Func<DateValue, OxyColor> colorSeparator = dv =>
+            }
+
+            Color ColorSeparator(DateValue dv)
             {
                 double fastValue = fastSma[dv.Date];
                 double mediumValue = mediumSma[dv.Date];
                 double slowValue = slowSma[dv.Date];
-                OxyColor result;
-                if (fastValue >= mediumValue &&
-                    mediumValue >= slowValue)
+                Color result;
+                if (fastValue >= mediumValue && mediumValue >= slowValue)
                     result = colorUp;
-                else if (fastValue < mediumValue &&
-                         mediumValue < slowValue)
+                else if (fastValue < mediumValue && mediumValue < slowValue)
                     result = colorDown;
                 else
                     result = colorRange;
                 return result;
-            };
+            }
+
             TimeSeries.Plot(
                 TimeSeriesPlotInfo.Create(series: tsOpen, color: colorSeries, plotOrder: 5),
-                TimeSeriesPlotInfo.Create(series: tsOpen, colorFunction: colorSeparator, legendFunction: legendSeparator,
+                TimeSeriesPlotInfo.Create(series: tsOpen, colorFunction: ColorSeparator, legendFunction: LegendSeparator,
                     plotOrder: 4),
-                TimeSeriesPlotInfo.Create(series: fastSma, color: OxyColor.FromRgb(125, 125, 125), plotOrder: 1),
-                TimeSeriesPlotInfo.Create(series: mediumSma, color: OxyColor.FromRgb(175, 175, 175), plotOrder: 2),
-                TimeSeriesPlotInfo.Create(series: slowSma, color: OxyColor.FromRgb(225, 225, 225), plotOrder: 3)
+                TimeSeriesPlotInfo.Create(series: fastSma, color: Color.FromArgb(1, 125, 125, 125), plotOrder: 1),
+                TimeSeriesPlotInfo.Create(series: mediumSma, color: Color.FromArgb(1, 175, 175, 175), plotOrder: 2),
+                TimeSeriesPlotInfo.Create(series: slowSma, color: Color.FromArgb(1, 225, 225, 225), plotOrder: 3)
             );
 
             // estadísticas de velas
@@ -115,18 +116,18 @@ namespace TeslaAnalysis
                     string[] items = line.Split(',');
                     return new Candle()
                     {
-                        StartDate = DateTime.ParseExact(items[0], "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        Start = DateTime.ParseExact(items[0], "yyyy-MM-dd", CultureInfo.InvariantCulture),
                         Open = double.Parse(items[1], CultureInfo.InvariantCulture),
-                        High = double.Parse(items[2], CultureInfo.InvariantCulture),
-                        Low = double.Parse(items[3], CultureInfo.InvariantCulture),
+                        Max = double.Parse(items[2], CultureInfo.InvariantCulture),
+                        Min = double.Parse(items[3], CultureInfo.InvariantCulture),
                         Close = double.Parse(items[4], CultureInfo.InvariantCulture),
                     };
                 })
-                .Where(candle => candle.StartDate >= firstDate)
-                .OrderBy(candle => candle.StartDate)
+                .Where(candle => candle.Start >= firstDate)
+                .OrderBy(candle => candle.Start)
                 .ToList();
-            DateTime date1 = candles.First().StartDate;
-            DateTime date2 = candles[1].StartDate;
+            DateTime date1 = candles.First().Start;
+            DateTime date2 = candles[1].Start;
             TimeSpan duration = date2 - date1;
             candles
                 .ForEach(candle => candle.Duration = duration);

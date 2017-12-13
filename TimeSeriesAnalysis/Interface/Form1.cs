@@ -127,9 +127,8 @@ namespace Interface
                                         v.Date <= LastDate)
                             .ToTimeSeries(ts.Name);
 
-                    return new TimeSeriesPlotInfo(
+                    return TimeSeriesPlotInfo.Create(
                         finalTs,
-                        typeof(FunctionSeries),
                         item.Name,
                         OxyColor.FromRgb(item.Color.R, item.Color.G, item.Color.B));
                 });

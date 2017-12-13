@@ -17,26 +17,33 @@ namespace Common
         }
         public static IEnumerable<DateTime> GetDatesTo(this DateTime date, DateTime lastDate, TimeSpan span)
         {
-            DateTime current = date;
-            int direction = date <= lastDate
-                ? 1
-                : -1;
-            bool lastDayReached = direction > 0
-                ? current > lastDate
-                : current < lastDate;
-            while (!lastDayReached)
-            {
-                yield return current;
+            DateTime currentDate = date;
+            yield return currentDate;
 
-                current = current.Add(span);
-                lastDayReached = direction > 0
-                    ? current > lastDate
-                    : current < lastDate;
+            int direction = date <= lastDate ? 1 : -1;
+            TimeSpan increment = span.MultiplyBy(direction);
+            bool IsLastDateReached(DateTime current)
+            {
+                return direction > 0 ? current > lastDate : current < lastDate;
+            }
+
+            currentDate += increment;
+            bool lastDateReached = IsLastDateReached(currentDate);
+            while (!lastDateReached)
+            {
+                yield return currentDate;
+
+                currentDate += increment;
+                lastDateReached = IsLastDateReached(currentDate);
             }
         }
-        public static DateTime GetMinDate(params DateTime[] days)
+        public static DateTime Min(params DateTime[] days)
         {
             return days.Min();
+        }
+        public static DateTime Max(params DateTime[] days)
+        {
+            return days.Max();
         }
         public static DateTime AddDaysWithoutLeapYear(this DateTime input, int days)
         {
@@ -61,5 +68,9 @@ namespace Common
             return output;
         }
 
+        public static DateTime Substract(this DateTime date, TimeSpan span)
+        {
+            return date.Add(span.MultiplyBy(-1));
+        }
     }
 }

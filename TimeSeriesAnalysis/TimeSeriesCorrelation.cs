@@ -57,12 +57,11 @@ namespace TimeSeriesAnalysis
             List<DateValue> vals = values1.ToList();
             vals.AddRange(values2);
 
-            DataPointSeries series = Plotter.GetDataPointSeries(
-                typeof(FunctionSeries),
-                new Spi(nameof(FunctionSeries.LineStyle), LineStyle.None),
-                new Spi(nameof(FunctionSeries.MarkerFill), OxyColor.FromRgb(0, 0, 255)),
-                new Spi(nameof(FunctionSeries.MarkerType), MarkerType.Circle),
-                new Spi(nameof(FunctionSeries.MarkerSize), 3)
+            DataPointSeries series = Plotter.GetDataPointSeries<FunctionSeries>(
+                (nameof(FunctionSeries.LineStyle), LineStyle.None),
+                (nameof(FunctionSeries.MarkerFill), OxyColor.FromRgb(0, 0, 255)),
+                (nameof(FunctionSeries.MarkerType), MarkerType.Circle),
+                (nameof(FunctionSeries.MarkerSize), 3)
                 );
             vals
                 .GroupBy(dv => dv.Date)
@@ -121,7 +120,7 @@ namespace TimeSeriesAnalysis
             FunctionSeries series = new FunctionSeries
             {
                 MarkerType = plotInfo.Marker,
-                Color = plotInfo.Color,
+                Color = OxyColor.FromArgb(plotInfo.Color.A, plotInfo.Color.R, plotInfo.Color.G, plotInfo.Color.B),
                 Title = plotInfo.Title,
             };
             DoCorrelationAnalysis(ts, ts, parameters)

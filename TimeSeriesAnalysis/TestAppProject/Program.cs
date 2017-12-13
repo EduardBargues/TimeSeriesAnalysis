@@ -18,10 +18,12 @@ using QuandlCS.Types;
 using TeslaAnalysis;
 using TimeSeriesAnalysis;
 using DateValue = TimeSeriesAnalysis.DateValue;
-using Plotter = TimeSeriesAnalysis.Plotter;
-using Spi = TimeSeriesAnalysis.Spi;
 using TimeSeriesCorrelation = TimeSeriesAnalysis.TimeSeriesCorrelation;
 using TimeSeriesPlotInfo = TimeSeriesAnalysis.TimeSeriesPlotInfo;
+using System.Collections.Specialized;
+using System.Drawing;
+using System.Net;
+using System.Text;
 
 namespace TestAppProject
 {
@@ -44,9 +46,82 @@ namespace TestAppProject
             //TestCorrelationPlot();
             //TestMovingAverages();
             //TestMultiColorSeries();
-            FromWebDataToData();
+            FromWebToData();
+            //FromWebDataToData();
             //FromDailyDataToCandleData();
         }
+
+        private static void FromWebToData()
+        {
+            string url = "https://api.bitfinex.com/v2/trades/tBTCUSD/hist";
+            long first = 0;//1408579200000;
+
+            DateTime date1970 = new DateTime(1970, 1, 1);
+            long last = (long)(DateTime.Now - date1970).TotalMilliseconds;
+
+            NameValueCollection query = new NameValueCollection
+            {
+                {"start",first.ToString(CultureInfo.InvariantCulture) },
+                {"end", last.ToString(CultureInfo.InvariantCulture) },
+                {"limit","1000" },
+                {"sort","1" }
+            };
+            bool keepAsking = true;
+            using (WebClient client = new WebClient())
+            {
+                string uri = url + query.ToQueryString();
+                string data = client.DownloadString(uri);
+
+                List<Trade> trades = data
+                    .Replace("[", "")
+                    .Replace("]", "")
+                    .Split(',')
+                    .Select((item, index) => new { Item = item, Index = index })
+                    .GroupBy(anonymous => anonymous.Index / 4)
+                    .Select(grouping =>
+                    {
+                        List<double> numbers = grouping
+                            .Select(item => double.Parse(item.Item, CultureInfo.InvariantCulture))
+                            .ToList();
+                        double millisecond = numbers[1];
+                        double volume = numbers[2];
+                        double price = numbers[3];
+                        DateTime date = date1970.AddMilliseconds(millisecond);
+                        Trade trade = new Trade
+                        {
+                            Instant = date,
+                            Volume = Math.Abs(volume),
+                            Price = Math.Abs(price),
+                            Type = volume < 0
+                                ? TradeType.Sell
+                                : TradeType.Buy
+                        };
+                        return trade;
+                    })
+                    .ToList();
+            }
+        }
+        public static string ToQueryString(this NameValueCollection nvc)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (string key in nvc.Keys)
+            {
+                if (string.IsNullOrEmpty(key)) continue;
+
+                string[] values = nvc.GetValues(key);
+                if (values == null) continue;
+
+                foreach (string value in values)
+                {
+                    sb.Append(sb.Length == 0 ? "?" : "&");
+                    sb.AppendFormat("{0}={1}", Uri.EscapeDataString(key), Uri.EscapeDataString(value));
+                }
+            }
+
+            return sb.ToString();
+        }
+
 
         private static void FromWebDataToData()
         {
@@ -82,10 +157,10 @@ namespace TestAppProject
                     .Sum(trade => trade.Volume),
                 Close = grouping.Last().Price,
                 Duration = TimeSpan.FromDays(1),
-                High = grouping.Max(trade => trade.Price),
-                Low = grouping.Min(trade => trade.Price),
+                Max = grouping.Max(trade => trade.Price),
+                Min = grouping.Min(trade => trade.Price),
                 Open = grouping.First().Price,
-                StartDate = grouping.Key,
+                Start = grouping.Key,
             };
         }
 
@@ -160,13 +235,15 @@ namespace TestAppProject
             TimeSeries sinus = TimeSeries.CreateDailySinusoidalTimeSeries(100, 2 * Math.PI / 365, 0, firstDate, lastDate);
             TimeSeries sum = sinus.Sum(random);
 
-            Func<DateValue, OxyColor> colorFunction = dv => dv.Value >= 0
-                ? OxyColor.FromRgb(255, 0, 0)
-                : OxyColor.FromRgb(0, 0, 255);
-            Func<OxyColor, string> legendColor = color => color == OxyColor.FromRgb(255, 0, 0)
+            Color ColorFunction(DateValue dv) => dv.Value >= 0
+                ? Color.Red
+                : Color.Blue;
+
+            string LegendColor(Color color) => color == Color.Red
                 ? "T(t)>=0"
                 : "T(t)<0";
-            TimeSeriesPlotInfo info = TimeSeriesPlotInfo.Create(series: sum, colorFunction: colorFunction, legendFunction: legendColor);
+
+            TimeSeriesPlotInfo info = TimeSeriesPlotInfo.Create(series: sum, colorFunction: ColorFunction, legendFunction: LegendColor);
             TimeSeries.Plot(info);
         }
 
@@ -184,9 +261,9 @@ namespace TestAppProject
             TimeSeries ema = sum.GetExponentialMovingAverage(TimeSpan.FromDays(period), TimeSpan.FromDays(1))
                 .ToTimeSeries($"EMA-{period}");
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(sum, OxyColor.FromRgb(255, 0, 0)),
-                new TimeSeriesPlotInfo(sma, OxyColor.FromRgb(0, 255, 0)),
-                new TimeSeriesPlotInfo(ema, OxyColor.FromRgb(0, 0, 255))
+                TimeSeriesPlotInfo.Create(sum, color: Color.Red),
+                TimeSeriesPlotInfo.Create(sma, color: Color.Green),
+                TimeSeriesPlotInfo.Create(ema, color: Color.Blue)
                 );
         }
 
@@ -201,13 +278,12 @@ namespace TestAppProject
 
         private static void TestGenericPlotter()
         {
-            DataPointSeries series = Plotter.GetDataPointSeries(
-                typeof(FunctionSeries),
-                new Spi(nameof(FunctionSeries.LineStyle), LineStyle.Automatic),
-                new Spi(nameof(FunctionSeries.MarkerType), MarkerType.Square),
-                new Spi(nameof(FunctionSeries.Color), OxyColor.FromRgb(255, 0, 0)),
-                new Spi(nameof(FunctionSeries.MarkerFill), OxyColor.FromRgb(0, 0, 255)),
-                new Spi(nameof(FunctionSeries.MarkerSize), 10)
+            DataPointSeries series = Plotter.GetDataPointSeries<FunctionSeries>(
+                (nameof(FunctionSeries.LineStyle), LineStyle.Automatic),
+                (nameof(FunctionSeries.MarkerType), MarkerType.Square),
+                (nameof(FunctionSeries.Color), OxyColor.FromRgb(255, 0, 0)),
+                (nameof(FunctionSeries.MarkerFill), OxyColor.FromRgb(0, 0, 255)),
+                (nameof(FunctionSeries.MarkerSize), 10)
                 );
 
             Random random = new Random();
@@ -236,8 +312,8 @@ namespace TestAppProject
                 .Normalize()
                 .ToTimeSeries();
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(normIncrements, typeof(LinearBarSeries), "increments", OxyColor.FromArgb(100, 0, 0, 255)),
-                new TimeSeriesPlotInfo(normValues, typeof(FunctionSeries), "series", OxyColor.FromRgb(255, 0, 0))
+                TimeSeriesPlotInfo.Create(normIncrements, seriesType: typeof(LinearBarSeries), title: "increments", color: Color.Blue),
+                TimeSeriesPlotInfo.Create(normValues, seriesType: typeof(FunctionSeries), title: "series", color: Color.Red)
                 );
         }
 
@@ -249,8 +325,8 @@ namespace TestAppProject
             TimeSeries sinus = TimeSeries.CreateDailySinusoidalTimeSeries(50, 2 * Math.PI / 365, 1, firstDate, lastDate);
 
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(line, typeof(FunctionSeries), "line", OxyColor.FromRgb(255, 0, 0), 1),
-                new TimeSeriesPlotInfo(sinus, typeof(LinearBarSeries), "bars", OxyColor.FromArgb(255, 0, 0, 255), 2)
+                TimeSeriesPlotInfo.Create(line, seriesType: typeof(FunctionSeries), title: "line", color: Color.Red, plotOrder: 1),
+                TimeSeriesPlotInfo.Create(sinus, seriesType: typeof(LinearBarSeries), title: "bars", color: Color.Blue, plotOrder: 2)
                 );
         }
 
@@ -270,8 +346,8 @@ namespace TestAppProject
                 .GetTendencyLines(100)
                 .ToTimeSeries();
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(tendencyLines, typeof(FunctionSeries), "Tendencies", OxyColor.FromRgb(0, 0, 255)),
-                new TimeSeriesPlotInfo(ts, typeof(FunctionSeries), "Series", OxyColor.FromRgb(255, 0, 0))
+                TimeSeriesPlotInfo.Create(ts, seriesType: typeof(LinearBarSeries), title: "increments", color: Color.Blue),
+                TimeSeriesPlotInfo.Create(tendencyLines, seriesType: typeof(FunctionSeries), title: "series", color: Color.Red)
                 );
         }
 
@@ -293,9 +369,9 @@ namespace TestAppProject
                 .ToTimeSeries();
 
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(ts, "series", OxyColor.FromRgb(255, 0, 0)),
-                new TimeSeriesPlotInfo(topValues, "top values", OxyColor.FromRgb(0, 255, 0)),
-                new TimeSeriesPlotInfo(bottomValues, "bottom values", OxyColor.FromRgb(0, 0, 255))
+                TimeSeriesPlotInfo.Create(ts, seriesType: typeof(LinearBarSeries), title: "series", color: Color.Blue),
+                TimeSeriesPlotInfo.Create(topValues, seriesType: typeof(FunctionSeries), title: "top", color: Color.Red),
+                TimeSeriesPlotInfo.Create(bottomValues, seriesType: typeof(LinearBarSeries), title: "bottom", color: Color.Green)
                 );
         }
 
@@ -314,7 +390,7 @@ namespace TestAppProject
             TimeSeries normalized = series.Values
                 .Normalize()
                 .ToTimeSeries();
-            TimeSeries.Plot(new TimeSeriesPlotInfo(normalized));
+            TimeSeries.Plot(TimeSeriesPlotInfo.Create(normalized));
         }
         private static void IsNasdaqPeriodic()
         {
@@ -343,9 +419,9 @@ namespace TestAppProject
             };
             TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
             trend.Name = "Trend";
-            TimeSeries.Plot(new TimeSeriesPlotInfo(series, OxyColor.FromRgb(255, 0, 0)),
-                         new TimeSeriesPlotInfo(decomp.Trend, OxyColor.FromRgb(0, 0, 255)),
-                         new TimeSeriesPlotInfo(decomp.Seasonal, OxyColor.FromRgb(0, 255, 0)));
+            TimeSeries.Plot(TimeSeriesPlotInfo.Create(series, color: Color.Red),
+                            TimeSeriesPlotInfo.Create(decomp.Trend, color: Color.Green),
+                            TimeSeriesPlotInfo.Create(decomp.Seasonal, color: Color.Blue));
             Random r = new Random();
             int minYear = series.Dates.Min(dv => dv.Year);
             List<TimeSeriesPlotInfo> infos = trend.Values
@@ -365,11 +441,11 @@ namespace TestAppProject
                         .SetYearTo(minYear)
                         .ToTimeSeries();
 
-                    return new TimeSeriesPlotInfo(
-                        s,
-                        typeof(FunctionSeries),
-                        $"{yearNumber}",
-                        OxyColor.FromRgb((byte)r.Next(0, 255), (byte)r.Next(0, 255), (byte)r.Next(0, 255)));
+                    return TimeSeriesPlotInfo.Create(
+                        series: s,
+                        seriesType: typeof(FunctionSeries),
+                        title: $"{yearNumber}",
+                        color: Color.FromArgb(100, (byte)r.Next(0, 255), (byte)r.Next(0, 255), (byte)r.Next(0, 255)));
                 })
                 .ToList();
             TimeSeries.Plot(infos);
@@ -421,10 +497,10 @@ namespace TestAppProject
             };
             TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(series, "Series", OxyColor.FromRgb(255, 0, 0)),
-                new TimeSeriesPlotInfo(decomp.Trend, "Trend", OxyColor.FromRgb(0, 0, 255)),
-                new TimeSeriesPlotInfo(decomp.Seasonal, "Seasonal", OxyColor.FromRgb(0, 255, 0)),
-                new TimeSeriesPlotInfo(decomp.Remainder, "Remainder", OxyColor.FromRgb(0, 100, 0))
+                TimeSeriesPlotInfo.Create(series: series, title: "Series", color: Color.Red),
+                TimeSeriesPlotInfo.Create(series: decomp.Trend, title: "Trend", color: Color.Green),
+                TimeSeriesPlotInfo.Create(series: decomp.Seasonal, title: "Seasonal", color: Color.Blue),
+                TimeSeriesPlotInfo.Create(series: decomp.Remainder, title: "Remainder", color: Color.Gray)
                 );
         }
 
@@ -450,10 +526,10 @@ namespace TestAppProject
             };
             TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
             TimeSeries.Plot(
-                new TimeSeriesPlotInfo(series, "Series", OxyColor.FromRgb(255, 0, 0)),
-                new TimeSeriesPlotInfo(decomp.Trend, "Trend", OxyColor.FromRgb(0, 0, 255)),
-                new TimeSeriesPlotInfo(decomp.Seasonal, "Seasonal", OxyColor.FromRgb(0, 255, 0)),
-                new TimeSeriesPlotInfo(decomp.Remainder, "Remainder", OxyColor.FromRgb(0, 100, 0))
+                TimeSeriesPlotInfo.Create(series: series, title: "Series", color: Color.Red),
+                TimeSeriesPlotInfo.Create(series: decomp.Trend, title: "Trend", color: Color.Green),
+                TimeSeriesPlotInfo.Create(series: decomp.Seasonal, title: "Seasonal", color: Color.Blue),
+                TimeSeriesPlotInfo.Create(series: decomp.Remainder, title: "Remainder", color: Color.Gray)
             );
         }
 

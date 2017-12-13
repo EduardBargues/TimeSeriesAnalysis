@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -578,7 +579,7 @@ namespace TimeSeriesAnalysis
             form.Controls.Add(view);
             form.ShowDialog();
         }
-        public static PlotView GetPlotView(IEnumerable<TimeSeriesPlotInfo> parameters)
+        public static PlotView GetPlotView(IEnumerable<TimeSeriesPlotInfo> parameters, Action<object, AxisChangedEventArgs> onAxisChangedMethod = null)
         {
             PlotModel model = new PlotModel();
 
@@ -587,7 +588,11 @@ namespace TimeSeriesAnalysis
                 .ForEach(pi => GetDataPointSeries(pi).ForEach(dps => model.Series.Add(dps)));
 
             model.Axes.Clear();
-            model.Axes.Add(new DateTimeAxis());
+            DateTimeAxis axis = new DateTimeAxis();
+            if (onAxisChangedMethod != null)
+                axis.AxisChanged += onAxisChangedMethod.Invoke;
+
+            model.Axes.Add(axis);
             PlotView view = new PlotView
             {
                 Model = model,
@@ -609,7 +614,7 @@ namespace TimeSeriesAnalysis
         {
             LinearBarSeries series = new LinearBarSeries
             {
-                FillColor = info.Color,
+                FillColor = OxyColor.FromArgb(info.Color.A, info.Color.R, info.Color.G, info.Color.B),
                 Title = info.Title,
             };
             info.Series.Values
@@ -627,21 +632,23 @@ namespace TimeSeriesAnalysis
             List<DateValue> values = info.Series.Values
                 .OrderBy(dv => dv.Date)
                 .ToList();
-            OxyColor previousColor = info.ColorFunction.Invoke(values.First());
+            Color previousColor = values.Any()
+                ? info.ColorFunction.Invoke(values.First())
+                : Color.Blue;
             FunctionSeries currentSeries = new FunctionSeries
             {
                 MarkerType = info.Marker,
                 Title = info.LegendTitleFunction.Invoke(previousColor),
                 RenderInLegend = true,
-                Color=previousColor
+                Color = OxyColor.FromArgb(previousColor.A, previousColor.R, previousColor.G, previousColor.B)
             };
-            HashSet<OxyColor> plottedColors = new HashSet<OxyColor>();
+            HashSet<Color> plottedColors = new HashSet<Color>();
             values
                 .ForEach(dv =>
                 {
                     double dayNumeric = DateTimeAxis.ToDouble(dv.Date);
                     DataPoint point = new DataPoint(dayNumeric, dv.Value);
-                    OxyColor color = info.ColorFunction.Invoke(dv);
+                    Color color = info.ColorFunction.Invoke(dv);
                     if (color != previousColor)
                     {
                         if (currentSeries.Points.Count >= 2)
@@ -653,7 +660,7 @@ namespace TimeSeriesAnalysis
                         {
                             MarkerType = info.Marker,
                             Title = info.LegendTitleFunction.Invoke(color),
-                            Color = color,
+                            Color = OxyColor.FromArgb(color.A, color.R, color.G, color.B),
                             RenderInLegend = !plottedColors.Contains(color),
                         };
                     }
@@ -704,11 +711,11 @@ namespace TimeSeriesAnalysis
         public IEnumerable<DateValue> GetSimpleMovingAverage(TimeSpan span)
         {
             return from dv in Values
-                let leftDate = dv.Date.Add(-span)
-                let average = Dates.Where(day2 => day2 >= leftDate &&
-                                                  day2 <= dv.Date)
-                    .Average(day2 => this[day2])
-                select new DateValue(dv.Date, average);
+                   let leftDate = dv.Date.Add(-span)
+                   let average = Dates.Where(day2 => day2 >= leftDate &&
+                                                     day2 <= dv.Date)
+                       .Average(day2 => this[day2])
+                   select new DateValue(dv.Date, average);
         }
         public IEnumerable<DateValue> GetCenteredMovingAverage(TimeSpan span)
         {
@@ -719,12 +726,12 @@ namespace TimeSeriesAnalysis
             TimeSpan rightSpan)
         {
             return from dv in Values
-                let leftDate = dv.Date.Add(-leftSpan)
-                let rightDate = dv.Date.Add(rightSpan)
-                let average = Dates.Where(date => date >= leftDate &&
-                                                  date <= rightDate)
-                    .Average(date => this[date])
-                select new DateValue(dv.Date, average);
+                   let leftDate = dv.Date.Add(-leftSpan)
+                   let rightDate = dv.Date.Add(rightSpan)
+                   let average = Dates.Where(date => date >= leftDate &&
+                                                     date <= rightDate)
+                       .Average(date => this[date])
+                   select new DateValue(dv.Date, average);
         }
         public IEnumerable<DateValue> GetExponentialMovingAverage(
             TimeSpan span,
@@ -741,7 +748,7 @@ namespace TimeSeriesAnalysis
                 yield return new DateValue(date, value);
             }
         }
-        
+
         #endregion
     }
 }
