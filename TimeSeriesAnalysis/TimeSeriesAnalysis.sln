@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CandleTimeSeries", "..\Tesl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DashBoard", "..\DashBoard\DashBoard.csproj", "{3113DD66-A55E-4432-8348-23FCBEB91469}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Strategy", "..\Strategy\Strategy.csproj", "{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +70,10 @@ Global
 		{3113DD66-A55E-4432-8348-23FCBEB91469}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3113DD66-A55E-4432-8348-23FCBEB91469}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3113DD66-A55E-4432-8348-23FCBEB91469}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

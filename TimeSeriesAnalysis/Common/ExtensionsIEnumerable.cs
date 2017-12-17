@@ -36,10 +36,6 @@ namespace Common
             return variance;
         }
 
-        public static double Average<T>(this IEnumerable<T> list, Func<T, int, double> f)
-        {
-            return list.WeightedAverage(f, (element, index) => 1);
-        }
         public static double WeightedAverage<T>(this IEnumerable<T> list
             , Func<T, int, double> function
             , Func<T, int, double> weightFunction)
@@ -52,8 +48,19 @@ namespace Common
                     sum += function(element, index) * weightFunction(element, index);
                     sumWeights += weightFunction(element, index);
                 });
-
             return sum.DivideBy(sumWeights);
+        }
+        public static double Average<T>(this IEnumerable<T> list, Func<T, int, double> f)
+        {
+            return list.WeightedAverage(f, (element, index) => 1);
+        }
+        public static double ExponentialAverage<T>(this IEnumerable<T> list, Func<T, int, double> f)
+        {
+            T[] array = list
+                .ToArray();
+
+            return array
+                .WeightedAverage(f, (element, index) => Math.Exp(index - array.Length));
         }
     }
 }

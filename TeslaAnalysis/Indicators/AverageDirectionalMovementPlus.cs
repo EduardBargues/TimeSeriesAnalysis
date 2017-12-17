@@ -26,7 +26,7 @@ namespace TeslaAnalysis.Indicators
                     .Select(idx => series[idx])
                     .ToArray();
                 double ema = candles
-                    .WeightedAverage((cdl, idx) => dmPlus.GetValueAt(cdl.Start), (cdl, idx) => candles.Length - idx);
+                    .WeightedAverage((cdl, idx) => dmPlus[cdl.Start], (cdl, idx) => candles.Length - idx);
                 return ema;
             }
 

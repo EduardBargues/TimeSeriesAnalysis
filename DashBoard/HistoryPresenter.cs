@@ -60,7 +60,7 @@ namespace DashBoard
             DirectionalIndicatorPlus diPlus = DirectionalIndicatorPlus.Create(series, view.IndicatorPeriod, view.SmoothingPeriod);
             TimeSeries diPlusSeries = series.Candles
                 .Where((candle, index) => index > 0)
-                .Select(candle => new DateValue(candle.Start, diPlus.GetValueAt(candle.Start)))
+                .Select(candle => new DateValue(candle.Start, diPlus[candle.Start]))
                 .ToTimeSeries("DI+");
 
             yield return (diPlusSeries, Color.Blue);
@@ -75,21 +75,16 @@ namespace DashBoard
             DirectionalMovementIndex dx = DirectionalMovementIndex.Create(series, view.IndicatorPeriod, view.IndicatorPeriod);
             TimeSeries dxSeries = series.Candles
                 .Where((candle, index) => index > 0)
-                .Select(candle => new DateValue(candle.Start, dx.GetValueAt(candle.Start)))
+                .Select(candle => new DateValue(candle.Start, dx[candle.Start]))
                 .ToTimeSeries("DX");
-            yield return (dxSeries, Color.DarkGray);
+            yield return (dxSeries, Color.DarkSlateGray);
 
-            //AverageDirectionalMovementPlus adx = AverageDirectionalMovementPlus.Create(
-            //    view.IndicatorPeriod,
-            //    view.SmoothingPeriod,
-            //    TimeSpan.FromDays(1),
-            //    series,
-            //    exponentialMovingAverage: false);
-            //TimeSeries adxSeries = series.Candles
-            //    .Where(candle => candle.Start > diStartDay)
-            //    .Select(candle => new DateValue(candle.Start, adx.GetValueAt(series, candle.Start)))
-            //    .ToTimeSeries("ADX");
-            //yield return (adxSeries, Color.DarkSlateGray);
+            AverageDirectionalMovementIndex adx = AverageDirectionalMovementIndex.Create(series, view.IndicatorPeriod, view.SmoothingPeriod);
+            TimeSeries adxSeries = series.Candles
+                .Where((candle, index) => index > 0)
+                .Select(candle => new DateValue(candle.Start, adx[candle.Start]))
+                .ToTimeSeries("ADX");
+            yield return (adxSeries, Color.DarkGray);
         }
 
         private CandleTimeSeries GetCandleTimeSeries()
