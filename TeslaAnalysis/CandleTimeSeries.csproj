@@ -81,19 +81,26 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AverageDirectionalMovementIndex.cs" />
+    <Compile Include="Indicators\AverageDirectionalMovementIndex.cs" />
+    <Compile Include="Indicators\AverageDirectionalMovementMinus.cs" />
+    <Compile Include="Indicators\AverageDirectionalMovementPlus.cs" />
+    <Compile Include="Indicators\AverageTrueRange.cs" />
     <Compile Include="Candle.cs" />
     <Compile Include="CandleTimeSeries.cs" />
     <Compile Include="CandleTimeSeriesPlotInfo.cs" />
-    <Compile Include="DirectionalIndicator.cs" />
-    <Compile Include="DirectionalMovementIndex.cs" />
+    <Compile Include="Indicators\DirectionalIndicatorMinus.cs" />
+    <Compile Include="Indicators\DirectionalIndicatorPlus.cs" />
+    <Compile Include="Indicators\DirectionalMovementMinus.cs" />
+    <Compile Include="Indicators\DirectionalMovementPlus.cs" />
+    <Compile Include="Indicators\DirectionalMovementIndex.cs" />
     <Compile Include="ExtensionsIEnumerableCandle.cs" />
     <Compile Include="ExtensionsIEnumerableTrade.cs" />
-    <Compile Include="IIndicator.cs" />
-    <Compile Include="Indicator.cs" />
+    <Compile Include="Indicators\IIndicator.cs" />
+    <Compile Include="Indicators\Indicator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Trade.cs" />
+    <Compile Include="Indicators\TrueRange.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

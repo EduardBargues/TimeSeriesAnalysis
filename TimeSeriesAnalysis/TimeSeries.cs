@@ -17,35 +17,75 @@ namespace TimeSeriesAnalysis
 {
     public class TimeSeries
     {
-        private readonly Dictionary<DateTime, double> values = new Dictionary<DateTime, double>();
+        private readonly Dictionary<DateTime, double> valuesByDate = new Dictionary<DateTime, double>();
+        private readonly DateValue[] dateValues;
+        private readonly Dictionary<DateTime, int> indicesByDate = new Dictionary<DateTime, int>();
 
-        public IEnumerable<DateTime> Dates => values.Keys;
-        public IEnumerable<DateValue> Values => values.Keys
-            .Select(date => new DateValue(date, this[date]));
+        public IEnumerable<DateTime> Dates => dateValues
+            .Select(dv => dv.Date);
+        public IEnumerable<DateValue> Values => dateValues;
         public string Name { get; set; }
+
         // CONSTRUCTORS
         public TimeSeries()
         {
 
         }
-        public TimeSeries(Dictionary<DateTime, double> values)
+        public TimeSeries(Dictionary<DateTime, double> valsByDate)
         {
-            this.values = values.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            List<KeyValuePair<DateTime, double>> kvps = valsByDate
+                .OrderBy(kvp => kvp.Key)
+                .ToList();
+            int count = kvps.Count;
+            dateValues = new DateValue[count];
+            kvps
+                .ForEach((kvp, index) =>
+                {
+                    DateValue dv = new DateValue(kvp.Key, kvp.Value);
+                    dateValues[index] = dv;
+                    valuesByDate.Add(kvp.Key, kvp.Value);
+                    indicesByDate.Add(dv.Date, index);
+                });
         }
-        public static TimeSeries CreateDailyConstantTimeSeries(double constantValue, DateTime firstDate, DateTime lastDate)
+        public TimeSeries(IEnumerable<DateValue> values)
+        {
+            DateValue[] orderedValues = values
+                .OrderBy(dv => dv.Date)
+                .ToArray();
+
+            int count = orderedValues.Length;
+
+            dateValues = new DateValue[count];
+            orderedValues
+                .ForEach((dateValue, index) =>
+                {
+                    dateValues[index] = dateValue;
+                    valuesByDate.Add(dateValue.Date, dateValue.Value);
+                    indicesByDate.Add(dateValue.Date, index);
+                });
+        }
+
+        public static TimeSeries Create(Dictionary<DateTime, double> vals)
+        {
+            TimeSeries result = new TimeSeries(vals);
+            return result;
+        }
+        public static TimeSeries CreateDailyConstantTimeSeries(double constantValue
+            , DateTime firstDate
+            , DateTime lastDate)
         {
             return CreateDailyTimeSeries(day => constantValue, firstDate, lastDate);
         }
-        public static TimeSeries CreateDailyLinearTimeSeries(double firstValue, double lastValue, DateTime firstDay, DateTime lastDay)
+        public static TimeSeries CreateDailyLinearTimeSeries(double firstValue
+            , double lastValue
+            , DateTime firstDay
+            , DateTime lastDay)
         {
             double range = (lastDay - firstDay).TotalDays;
             double increment = lastValue - firstValue;
-            Func<DateTime, double> function = day => firstValue + increment * (day - firstDay).TotalDays / range;
-
-            return CreateDailyTimeSeries(function, firstDay, lastDay);
+            double Function(DateTime day) => firstValue + increment * (day - firstDay).TotalDays / range;
+            return CreateDailyTimeSeries(Function, firstDay, lastDay);
         }
-
-
         /// <summary>
         /// Creates a time series with the form : ts= A * sin{alpha * (day - firstDay) + betha}
         /// </summary>
@@ -55,12 +95,19 @@ namespace TimeSeriesAnalysis
         /// <param name="firstDay"></param>
         /// <param name="lastDay"></param>
         /// <returns></returns>
-        public static TimeSeries CreateDailySinusoidalTimeSeries(double a, double alpha, double betha, DateTime firstDay, DateTime lastDay)
+        public static TimeSeries CreateDailySinusoidalTimeSeries(double a
+            , double alpha
+            , double betha
+            , DateTime firstDay
+            , DateTime lastDay)
         {
-            Func<DateTime, double> function = day => a * Math.Sin(alpha * (day - firstDay).TotalDays + betha);
-            return CreateDailyTimeSeries(function, firstDay, lastDay);
+            double Function(DateTime day) => a * Math.Sin(alpha * (day - firstDay).TotalDays + betha);
+            return CreateDailyTimeSeries(Function, firstDay, lastDay);
         }
-        public static TimeSeries CreateDailyUniformlyRandomSeries(double average, double amplitude, DateTime firstDate, DateTime lastDate)
+        public static TimeSeries CreateDailyUniformlyRandomSeries(double average
+            , double amplitude
+            , DateTime firstDate
+            , DateTime lastDate)
         {
             Random random = new Random();
             return CreateDailyTimeSeries(
@@ -68,8 +115,10 @@ namespace TimeSeriesAnalysis
                 firstDate: firstDate,
                 lastDate: lastDate);
         }
-        public static TimeSeries CreateDailyNormallyRandomSeries(double average, double deviation, DateTime firstDate,
-            DateTime lastDate)
+        public static TimeSeries CreateDailyNormallyRandomSeries(double average
+            , double deviation
+            , DateTime firstDate
+            , DateTime lastDate)
         {
             Random random = new Random();
             return CreateDailyTimeSeries(
@@ -77,159 +126,113 @@ namespace TimeSeriesAnalysis
                 firstDate: firstDate,
                 lastDate: lastDate);
         }
-        public static TimeSeries CreateDailyTimeSeries(Func<DateTime, double> function, DateTime firstDate, DateTime lastDate)
+        public static TimeSeries CreateDailyTimeSeries(Func<DateTime, double> function
+            , DateTime firstDate
+            , DateTime lastDate)
         {
             Dictionary<DateTime, double> vals = firstDate.GetDaysTo(lastDate)
-                .ToDictionary(day => day,
-                              function.Invoke);
-
+                .ToDictionary(day => day, function);
             return new TimeSeries(vals);
         }
-        // SET, GET VALUES
-        public void SetValue(DateTime date, double value)
-        {
-            if (!ContainsValueAt(date))
-                values.Add(date, 0);
-            values[date] = value;
-        }
+
+        // GET VALUES
         public double GetValue(DateTime date)
         {
-            return values[date];
-        }
-        public bool TryGetValue(DateTime day, out double value)
-        {
-            value = 0;
-            return values.TryGetValue(day, out value);
+            return valuesByDate[date];
         }
         public double this[DateTime date]
         {
-            get
-            {
-                return GetValue(date);
-            }
+            get => GetValue(date);
             set
             {
-                SetValue(date, value);
+                valuesByDate[date] = value;
+                int index = indicesByDate[date];
+                dateValues[index].Value = value;
             }
         }
         public bool ContainsValueAt(DateTime date)
         {
-            return values.ContainsKey(date);
+            return valuesByDate.ContainsKey(date);
         }
         public bool HasValues()
         {
-            return Dates.Any();
+            return dateValues.Any();
         }
 
         #region Apply functions
 
         public TimeSeries Sum(TimeSeries ts)
         {
-            return Apply(
-                (date, value) => ts.ContainsValueAt(date),
-                (date, value) => value + ts[date]);
+            Dictionary<DateTime, double> dictionary = ts.Dates
+                .ToDictionary(date => date, date => ts[date] + this[date]);
+            return Create(dictionary);
         }
         public TimeSeries Substract(double v)
         {
-            return Values
-                .Substract(v)
-                .ToTimeSeries();
+            Dictionary<DateTime, double> dictionary = Dates
+                .ToDictionary(date => date,
+                              date => this[date] - v);
+            return Create(dictionary);
         }
-
-        public IEnumerable<DateValue> Sum(double offset)
+        public TimeSeries Sum(double offset)
         {
-            return Values
-                .Sum(offset);
+            Dictionary<DateTime, double> dictionary = Dates
+                .ToDictionary(date => date,
+                    date => this[date] - offset);
+            return Create(dictionary);
         }
-
         public TimeSeries Substract(TimeSeries ts)
         {
-            return Sum(ts.MultiplyBy(-1));
+            Dictionary<DateTime, double> dictionary = ts.Dates
+                .ToDictionary(date => date, date => this[date] - ts[date]);
+            return Create(dictionary);
         }
         public TimeSeries MultiplyBy(double factor)
         {
-            return Apply((date, value) => value * factor);
+            Dictionary<DateTime, double> dictionary = Dates
+                .ToDictionary(date => date,
+                              date => factor * this[date]);
+            return Create(dictionary);
         }
-        public TimeSeries Merge(TimeSeries ts)
+        public TimeSeries Merge(TimeSeries ts, TimeSeriesMergeMode mergeAction = TimeSeriesMergeMode.MantainOriginal)
         {
-            return Dates
+            Dictionary<DateTime, double> dictionary = this.Dates
                 .Union(ts.Dates)
-                .Select(date => new DateValue(date, ContainsValueAt(date)
-                                                        ? this[date]
-                                                        : ts[date]))
-                .ToTimeSeries();
+                .ToDictionary(date => date, date =>
+                {
+                    switch (mergeAction)
+                    {
+                        case TimeSeriesMergeMode.Override:
+                            return ts[date];
+                        case TimeSeriesMergeMode.Sum:
+                            return (this.ContainsValueAt(date) ? this[date] : 0) +
+                                   (ts.ContainsValueAt(date) ? ts[date] : 0);
+                        case TimeSeriesMergeMode.MantainOriginal:
+                            return this.ContainsValueAt(date) ? this[date] : ts[date];
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(mergeAction), mergeAction, null);
+                    }
+                });
+            return Create(dictionary);
         }
 
-        public TimeSeries AddMissingValuesWith(Func<DateTime, double> function)
+        public TimeSeries Apply(Func<DateTime, double, bool> selectFunction = null
+            , Func<DateTime, double, DateTime> dateFunction = null
+            , Func<DateTime, double, double> valueFunction = null)
         {
-            Dictionary<DateTime, double> vals = HasValues()
-                ? GetMinimumDate().GetDaysTo(GetMaximumDate())
-                    .ToDictionary(day => day,
-                                  day => ContainsValueAt(day)
-                                      ? this[day]
-                                      : function.Invoke(day))
-                : new Dictionary<DateTime, double>();
+            bool Select(DateValue dv)
+            {
+                return selectFunction?.Invoke(dv.Date, dv.Value) ?? true;
+            }
 
-            return new TimeSeries(vals);
-        }
-        //public Tseries AddMissingValuesWith(IDateValuesFiller filler)
-        //{
-        //    return HasValues()
-        //        ? GetFirstDate().GetDatesTo(GetLastDate(), Span)
-        //            .Where(day => !ContainsValueAt(day))
-        //            .Select(day => filler.GetValueAt(day, this))
-        //            .Union(Values)
-        //            .ToTimeSeries()
-        //        : new Tseries();
-        //}
-
-        public TimeSeries Apply(
-            Func<DateTime, double, bool> selectFunction,
-            Func<DateTime, double, DateTime> offsetFunction,
-            Func<DateTime, double, double> valueFunction)
-        {
             return Values
-                .Where(dv => selectFunction.Invoke(dv.Date, dv.Value))
-                .Select(dv => dv.Apply(offsetFunction, valueFunction))
-                .Union(Values.Where(dv => !selectFunction.Invoke(dv.Date, dv.Value)))
+                .Where(Select)
+                .Select(dv => dv.Apply(dateFunction, valueFunction))
+                .Union(Values
+                            .Where(dv => !Select(dv)))
                 .ToTimeSeries();
         }
 
-        public TimeSeries Apply(
-            Func<DateTime, double, bool> selectFunction,
-            Func<DateTime, double, DateTime> offsetFunction)
-        {
-            return Apply(
-                selectFunction,
-                offsetFunction,
-                (date, value) => value);
-        }
-        public TimeSeries Apply(
-            Func<DateTime, double, bool> selectFunction,
-            Func<DateTime, double, double> valueFunction)
-        {
-            return Apply(
-                selectFunction,
-                (date, value) => date,
-                valueFunction);
-        }
-        public TimeSeries Apply(
-            Func<DateTime, double, DateTime> offsetFunction,
-            Func<DateTime, double, double> valueFunction)
-        {
-            return Apply(
-                (date, value) => true,
-                offsetFunction,
-                valueFunction);
-        }
-
-        public TimeSeries Apply(Func<DateTime, double, bool> selectFunction)
-        {
-            return Apply(
-                selectFunction,
-                (date, value) => date,
-                (date, value) => value);
-        }
         public TimeSeries RemoveDatesWhere(Func<DateTime, bool> selectFunction)
         {
             return Apply((date, value) => selectFunction.Invoke(date));
@@ -250,34 +253,10 @@ namespace TimeSeriesAnalysis
                                              date <= lastDay;
             return RemoveDatesWhere(f);
         }
-
-        public TimeSeries Apply(Func<DateTime, double, DateTime> offsetFunction)
-        {
-            return Apply(
-                (date, value) => true,
-                offsetFunction,
-                (date, value) => value);
-        }
-        public TimeSeries Apply(Func<DateTime, DateTime> offsetFunction)
-        {
-            return Apply((date, value) => offsetFunction.Invoke(date));
-        }
         public TimeSeries OffsetBy(TimeSpan span)
         {
-            Func<DateTime, DateTime> f = day => day.Add(span);
-            return Apply(f);
-        }
-
-        public TimeSeries Apply(Func<DateTime, double, double> valueFunction)
-        {
-            return Apply(
-                (date, value) => true,
-                (date, value) => date,
-                valueFunction);
-        }
-        public TimeSeries Apply(Func<DateTime, double> valueFunction)
-        {
-            return Apply((date, value) => valueFunction.Invoke(date));
+            Func<DateTime, double, DateTime> f = (day, value) => day.Add(span);
+            return Apply(dateFunction: f);
         }
         public TimeSeries OffsetBy(double offset)
         {
@@ -288,8 +267,8 @@ namespace TimeSeriesAnalysis
         public TimeSeries OffsetBy(Func<DateTime, bool> selectionFunction, double offset)
         {
             return Apply(
-                (date, value) => selectionFunction.Invoke(date),
-                (date, value) => value + offset);
+                selectFunction: (date, value) => selectionFunction(date),
+                valueFunction: (date, value) => value + offset);
         }
         #endregion
 
@@ -429,113 +408,6 @@ namespace TimeSeriesAnalysis
                 .Where(value => value.Date >= firstDate &&
                                 value.Date <= lastDate);
 
-        }
-        public object Clone()
-        {
-            return new TimeSeries(values);
-        }
-
-        public DateTime? GetClosestDay(DateTime day, bool lookInTheFuture)
-        {
-            DateTime? closestDate = null;
-            if (HasValues())
-            {
-                DateTime relativeDate = lookInTheFuture
-                    ? GetMaximumDate()
-                    : GetMinimumDate();
-                closestDate = day.GetDaysTo(relativeDate)
-                    .FirstOrDefault(ContainsValueAt);
-
-                closestDate = closestDate == DateTime.MinValue
-                    ? null
-                    : closestDate;
-            }
-
-            return closestDate;
-        }
-        public IEnumerable<DateTime> GetMissingDates()
-        {
-            return HasValues()
-                ? GetMinimumDate().GetDaysTo(GetMaximumDate())
-                    .Where(day => !ContainsValueAt(day))
-                : new List<DateTime>();
-        }
-
-        public double GetSlopeAt(DateTime date)
-        {
-            double slope = 0;
-
-            if (HasValues())
-            {
-                DateTime firstDate = GetMinimumDate();
-                DateTime lastDate = GetMaximumDate();
-                if (firstDate >= date)
-                {
-                    DateTime nextDate = GetDatesBetween(firstDate.AddDays(1), lastDate)
-                        .FirstOrDefault();
-                    if (nextDate != DateTime.MinValue)
-                    {
-                        double range = (nextDate - firstDate).TotalDays;
-                        if (range > 0)
-                            slope = (this[nextDate] - this[firstDate]) / range;
-                    }
-                }
-                if (lastDate <= date)
-                {
-                    DateTime previousDate = lastDate.GetDaysTo(firstDate)
-                        .FirstOrDefault(day => ContainsValueAt(day) &&
-                                               day < lastDate);
-                    if (previousDate != DateTime.MinValue)
-                    {
-                        double range = (lastDate - previousDate).TotalDays;
-                        if (range > 0)
-                            slope = (this[lastDate] - this[previousDate]) / range;
-                    }
-                }
-                if (firstDate < date &&
-                    lastDate > date)
-                {
-                    DateTime leftDay = Dates
-                        .Where(day => day <= date)
-                        .MinBy(day => (date - day).TotalDays);
-                    DateTime rightDay = Dates
-                        .Where(day => day >= date)
-                        .MinBy(day => (day - date).TotalDays);
-                    double range = (rightDay - leftDay).TotalDays;
-                    if (range > 0)
-                        slope = (this[rightDay] - this[leftDay]) / range;
-                }
-            }
-
-            return slope;
-        }
-        public DateTime? GetNextDate(DateTime date)
-        {
-            DateTime? result = null;
-
-            if (HasValues())
-            {
-                DateTime lastDate = GetMaximumDate();
-                if (lastDate >= date.AddDays(1))
-                    result = date.AddDays(1).GetDaysTo(lastDate)
-                        .First(ContainsValueAt);
-            }
-
-            return result;
-        }
-        public DateTime? GetPreviousDate(DateTime date)
-        {
-            DateTime? result = null;
-
-            if (HasValues())
-            {
-                DateTime firstDate = GetMinimumDate();
-                if (firstDate <= date.AddDays(-1))
-                    result = date.AddDays(-1).GetDaysTo(firstDate)
-                        .First(ContainsValueAt);
-            }
-
-            return result;
         }
 
         #region PLOT
@@ -686,17 +558,9 @@ namespace TimeSeriesAnalysis
                 .Where(date => tss.All(ts => ts.ContainsValueAt(date)));
         }
 
-        public TimeSeries Copy()
-        {
-            return new TimeSeries(values)
-            {
-                Name = Name
-            };
-        }
-
         public DateTime GetNextSpanDate(DateTime date, TimeSpan span)
         {
-            // TODO: cada serie sabe como añadir el span.
+            // TODO: cada serie sabe como añadir el periods.
             // si es una serie diaria puede tener la modalidad de omitir los 29s de febrero.
             return date.Add(span);
         }
@@ -708,45 +572,37 @@ namespace TimeSeriesAnalysis
 
         #region Moving Averages
 
-        public IEnumerable<DateValue> GetSimpleMovingAverage(TimeSpan span)
+        public IEnumerable<DateValue> GetSimpleMovingAverage(int periods)
         {
-            return from dv in Values
-                   let leftDate = dv.Date.Add(-span)
-                   let average = Dates.Where(day2 => day2 >= leftDate &&
-                                                     day2 <= dv.Date)
-                       .Average(day2 => this[day2])
+            return from dv in dateValues
+                   let average = indicesByDate[dv.Date].GetIntegersTo(Math.Max(0, indicesByDate[dv.Date] - periods))
+                                    .Average(index => dateValues[index].Value)
                    select new DateValue(dv.Date, average);
         }
-        public IEnumerable<DateValue> GetCenteredMovingAverage(TimeSpan span)
+        public IEnumerable<DateValue> GetCenteredMovingAverage(int periods)
         {
-            return GetCenteredMovingAverage(span.DivideBy(2), span.DivideBy(2));
+            return GetCenteredMovingAverage(periods / 2, periods / 2);
         }
-        public IEnumerable<DateValue> GetCenteredMovingAverage(
-            TimeSpan leftSpan,
-            TimeSpan rightSpan)
+        public IEnumerable<DateValue> GetCenteredMovingAverage(int leftPeriods, int rightPeriods)
         {
-            return from dv in Values
-                   let leftDate = dv.Date.Add(-leftSpan)
-                   let rightDate = dv.Date.Add(rightSpan)
-                   let average = Dates.Where(date => date >= leftDate &&
-                                                     date <= rightDate)
-                       .Average(date => this[date])
+            int maxIndex = dateValues.Length - 1;
+            return from dv in dateValues
+                   let leftIndex = Math.Max(0, indicesByDate[dv.Date] - leftPeriods)
+                   let rightIndex = Math.Min(maxIndex, indicesByDate[dv.Date] + rightPeriods)
+                   let average = leftIndex.GetIntegersTo(rightIndex)
+                                    .Average(index => dateValues[index].Value)
                    select new DateValue(dv.Date, average);
         }
-        public IEnumerable<DateValue> GetExponentialMovingAverage(
-            TimeSpan span,
-            TimeSpan step)
+        public IEnumerable<DateValue> GetExponentialMovingAverage(int periods)
         {
-            int n = (int)span.DivideBy(step);
-            double weight = (double)2 / (n + 1);
-
-            double previousEmaValue = 0;
-            foreach (DateTime date in GetMinimumDate().GetDatesTo(GetMaximumDate(), step))
-            {
-                double value = weight * this[date] + previousEmaValue * (1 - weight);
-                previousEmaValue = value;
-                yield return new DateValue(date, value);
-            }
+            return from dv in dateValues
+                   let valuesToUse = indicesByDate[dv.Date].GetIntegersTo(Math.Max(0, indicesByDate[dv.Date] - periods))
+                                        .Select(index => dateValues[index])
+                                        .ToArray()
+                   let ema = valuesToUse
+                                .WeightedAverage(function: (dateValue, index) => dateValue.Value,
+                                                 weightFunction: (dateValue, index) => valuesToUse.Length - index)
+                   select new DateValue(dv.Date, ema);
         }
 
         #endregion

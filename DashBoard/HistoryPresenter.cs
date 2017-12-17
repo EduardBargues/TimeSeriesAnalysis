@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MoreLinq;
 using TeslaAnalysis;
+using TeslaAnalysis.Indicators;
 using TimeSeriesAnalysis;
 
 namespace DashBoard
@@ -16,8 +17,8 @@ namespace DashBoard
         event Action LoadDataRequest;
         DateTime StartDate { get; }
         DateTime EndDate { get; }
-        TimeSpan IndicatorPeriod { get; }
-        TimeSpan SmoothingPeriod { get; }
+        int IndicatorPeriod { get; }
+        int SmoothingPeriod { get; }
     }
 
     public class HistoryPresenter
@@ -41,39 +42,54 @@ namespace DashBoard
         {
             CandleTimeSeries series = Context.Instance.HistoryCandleTimeSeries.Candles
                 .ToCandleTimeSeries();
-            DateTime diStartDay = view.StartDate.Add(view.IndicatorPeriod);
-            DirectionalIndicator diPlus = DirectionalIndicator.Create(view.IndicatorPeriod, plus: true);
+
+            //TrueRange tr = TrueRange.Create(series);
+            //TimeSeries trSeries = series.Candles
+            //    .Where((candle, index) => index > 0)
+            //    .Select(candle => new DateValue(candle.Start, tr.GetValueAt(candle.Start)))
+            //    .ToTimeSeries("TR");
+            //yield return (trSeries, Color.Blue);
+
+            //AverageTrueRange atr = AverageTrueRange.Create(series, view.SmoothingPeriod);
+            //TimeSeries atrSeries = series.Candles
+            //    .Where((candle, index) => index > 0)
+            //    .Select(candle => new DateValue(candle.Start, atr.GetValueAt(candle.Start)))
+            //    .ToTimeSeries("ATR");
+            //yield return (atrSeries, Color.Red);
+
+            DirectionalIndicatorPlus diPlus = DirectionalIndicatorPlus.Create(series, view.IndicatorPeriod, view.SmoothingPeriod);
             TimeSeries diPlusSeries = series.Candles
-                .Where(candle => candle.Start > diStartDay)
-                .Select(candle => new DateValue(candle.Start, diPlus.GetValueAt(series, candle.Start)))
+                .Where((candle, index) => index > 0)
+                .Select(candle => new DateValue(candle.Start, diPlus.GetValueAt(candle.Start)))
                 .ToTimeSeries("DI+");
+
             yield return (diPlusSeries, Color.Blue);
 
-            DirectionalIndicator diMinus = DirectionalIndicator.Create(view.IndicatorPeriod, plus: false);
+            DirectionalIndicatorMinus diMinus = DirectionalIndicatorMinus.Create(series, view.IndicatorPeriod, view.SmoothingPeriod);
             TimeSeries diMinusSeries = series.Candles
-                .Where(candle => candle.Start > diStartDay)
-                .Select(candle => new DateValue(candle.Start, diMinus.GetValueAt(series, candle.Start)))
+                .Where((candle, index) => index > 0)
+                .Select(candle => new DateValue(candle.Start, diMinus[candle.Start]))
                 .ToTimeSeries("DI-");
             yield return (diMinusSeries, Color.Red);
 
-            DirectionalMovementIndex dx = DirectionalMovementIndex.Create(view.IndicatorPeriod);
+            DirectionalMovementIndex dx = DirectionalMovementIndex.Create(series, view.IndicatorPeriod, view.IndicatorPeriod);
             TimeSeries dxSeries = series.Candles
-                .Where(candle => candle.Start > diStartDay)
-                .Select(candle => new DateValue(candle.Start, dx.GetValueAt(series, candle.Start)))
+                .Where((candle, index) => index > 0)
+                .Select(candle => new DateValue(candle.Start, dx.GetValueAt(candle.Start)))
                 .ToTimeSeries("DX");
             yield return (dxSeries, Color.DarkGray);
 
-            AverageDirectionalMovementIndex adx = AverageDirectionalMovementIndex.Create(
-                view.IndicatorPeriod,
-                view.SmoothingPeriod,
-                TimeSpan.FromDays(1),
-                series,
-                exponentialMovingAverage: false);
-            TimeSeries adxSeries = series.Candles
-                .Where(candle => candle.Start > diStartDay)
-                .Select(candle => new DateValue(candle.Start, adx.GetValueAt(series, candle.Start)))
-                .ToTimeSeries("ADX");
-            yield return (adxSeries, Color.DarkSlateGray);
+            //AverageDirectionalMovementPlus adx = AverageDirectionalMovementPlus.Create(
+            //    view.IndicatorPeriod,
+            //    view.SmoothingPeriod,
+            //    TimeSpan.FromDays(1),
+            //    series,
+            //    exponentialMovingAverage: false);
+            //TimeSeries adxSeries = series.Candles
+            //    .Where(candle => candle.Start > diStartDay)
+            //    .Select(candle => new DateValue(candle.Start, adx.GetValueAt(series, candle.Start)))
+            //    .ToTimeSeries("ADX");
+            //yield return (adxSeries, Color.DarkSlateGray);
         }
 
         private CandleTimeSeries GetCandleTimeSeries()

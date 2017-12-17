@@ -4,10 +4,8 @@ namespace TimeSeriesAnalysis
 {
     public class DecompositionParameters
     {
-        public TimeSpan MovingAverageDays { get; set; }
-        public TimeSpan SeasonalPeriod { get; set; }
+        public int MovingAverageDays { get; set; }
+        public int SeasonalPeriod { get; set; }
         public bool MaintainExtremeValues { get; set; }
-        public TimeSpan Step { get; set; }
     }
-
 }

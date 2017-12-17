@@ -256,9 +256,9 @@ namespace TestAppProject
             TimeSeries sum = sinus.Sum(random);
             sum.Name = "Series";
             const int period = 15;
-            TimeSeries sma = sum.GetSimpleMovingAverage(TimeSpan.FromDays(period))
+            TimeSeries sma = sum.GetSimpleMovingAverage(period)
                 .ToTimeSeries($"SMA-{period}");
-            TimeSeries ema = sum.GetExponentialMovingAverage(TimeSpan.FromDays(period), TimeSpan.FromDays(1))
+            TimeSeries ema = sum.GetExponentialMovingAverage(period)
                 .ToTimeSeries($"EMA-{period}");
             TimeSeries.Plot(
                 TimeSeriesPlotInfo.Create(sum, color: Color.Red),
@@ -394,61 +394,61 @@ namespace TestAppProject
         }
         private static void IsNasdaqPeriodic()
         {
-            string fileName = "NasdaqQuandl.csv";
-            string executablePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            FileInfo exe = new FileInfo(executablePath);
-            string path = Path.Combine(exe.Directory.FullName, fileName);
+            //string fileName = "NasdaqQuandl.csv";
+            //string executablePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            //FileInfo exe = new FileInfo(executablePath);
+            //string path = Path.Combine(exe.Directory.FullName, fileName);
 
-            if (!File.Exists(path))
-                CreateFile(path);
+            //if (!File.Exists(path))
+            //    CreateFile(path);
 
-            IEnumerable<DateValue> values = TimeSeries.FromCsvFile(path);
-            TimeSeries series = values.ToTimeSeries();
-            series.Name = "Series";
-            TimeSeries trend = series.GetCenteredMovingAverage(
-                 span: TimeSpan.FromDays(4 * 7))
-                 .ToTimeSeries();
-            LoessDecompositionParameters parameters = new LoessDecompositionParameters()
-            {
-                Series = series,
-                Step = TimeSpan.FromDays(1),
-                LocalPolynomialDegree = 1,
-                NumberOfNeighbors = 4 * 7,
-                RobustnessIterations = 1,
-                SeasonalPeriod = TimeSpan.FromDays(4 * 30)
-            };
-            TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
-            trend.Name = "Trend";
-            TimeSeries.Plot(TimeSeriesPlotInfo.Create(series, color: Color.Red),
-                            TimeSeriesPlotInfo.Create(decomp.Trend, color: Color.Green),
-                            TimeSeriesPlotInfo.Create(decomp.Seasonal, color: Color.Blue));
-            Random r = new Random();
-            int minYear = series.Dates.Min(dv => dv.Year);
-            List<TimeSeriesPlotInfo> infos = trend.Values
-                .GroupBy(dv => dv.Date.Year)
-                .Where(g => g.Key >= 2010 &&
-                            g.Key <= 2017)
-                .Select(g =>
-                {
-                    int yearNumber = g.Key;
-                    List<DateValue> vals = g.ToList();
-                    double max = vals.Max();
-                    double min = vals.Min();
-                    double amplitude = max - min;
-                    TimeSeries s = vals
-                        .Substract(min)
-                        .DivideBy(amplitude)
-                        .SetYearTo(minYear)
-                        .ToTimeSeries();
+            //IEnumerable<DateValue> values = TimeSeries.FromCsvFile(path);
+            //TimeSeries series = values.ToTimeSeries();
+            //series.Name = "Series";
+            //TimeSeries trend = series.GetCenteredMovingAverage(
+            //     periods: 4 * 7)
+            //     .ToTimeSeries();
+            //LoessDecompositionParameters parameters = new LoessDecompositionParameters()
+            //{
+            //    Series = series,
+            //    Step = TimeSpan.FromDays(1),
+            //    LocalPolynomialDegree = 1,
+            //    NumberOfNeighbors = 4 * 7,
+            //    RobustnessIterations = 1,
+            //    SeasonalPeriod = TimeSpan.FromDays(4 * 30)
+            //};
+            //TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
+            //trend.Name = "Trend";
+            //TimeSeries.Plot(TimeSeriesPlotInfo.Create(series, color: Color.Red),
+            //                TimeSeriesPlotInfo.Create(decomp.Trend, color: Color.Green),
+            //                TimeSeriesPlotInfo.Create(decomp.Seasonal, color: Color.Blue));
+            //Random r = new Random();
+            //int minYear = series.Dates.Min(dv => dv.Year);
+            //List<TimeSeriesPlotInfo> infos = trend.Values
+            //    .GroupBy(dv => dv.Date.Year)
+            //    .Where(g => g.Key >= 2010 &&
+            //                g.Key <= 2017)
+            //    .Select(g =>
+            //    {
+            //        int yearNumber = g.Key;
+            //        List<DateValue> vals = g.ToList();
+            //        double max = vals.Max();
+            //        double min = vals.Min();
+            //        double amplitude = max - min;
+            //        TimeSeries s = vals
+            //            .Substract(min)
+            //            .DivideBy(amplitude)
+            //            .SetYearTo(minYear)
+            //            .ToTimeSeries();
 
-                    return TimeSeriesPlotInfo.Create(
-                        series: s,
-                        seriesType: typeof(FunctionSeries),
-                        title: $"{yearNumber}",
-                        color: Color.FromArgb(100, (byte)r.Next(0, 255), (byte)r.Next(0, 255), (byte)r.Next(0, 255)));
-                })
-                .ToList();
-            TimeSeries.Plot(infos);
+            //        return TimeSeriesPlotInfo.Create(
+            //            series: s,
+            //            seriesType: typeof(FunctionSeries),
+            //            title: $"{yearNumber}",
+            //            color: Color.FromArgb(100, (byte)r.Next(0, 255), (byte)r.Next(0, 255), (byte)r.Next(0, 255)));
+            //    })
+            //    .ToList();
+            //TimeSeries.Plot(infos);
         }
 
         private static void CreateFile(string path)
@@ -480,57 +480,57 @@ namespace TestAppProject
 
         private static void TestLoessDecompositionLinear()
         {
-            DateTime firstDate = new DateTime(2000, 1, 1);
-            DateTime lastDate = new DateTime(2000, 12, 31);
-            TimeSeries trend = TimeSeries.CreateDailyLinearTimeSeries(0, 100, firstDate, lastDate);
-            TimeSeries remainder = TimeSeries.CreateDailyNormallyRandomSeries(0, 2.5, firstDate, lastDate);
-            TimeSeries series = trend.Sum(remainder);
-            TimeSeries.Plot(series);
-            LoessDecompositionParameters parameters = new LoessDecompositionParameters()
-            {
-                Step = new TimeSpan(1, 0, 0, 0),
-                Series = series,
-                LocalPolynomialDegree = 1,
-                NumberOfNeighbors = 10,
-                SeasonalPeriod = new TimeSpan(30, 0, 0, 0),
-                RobustnessIterations = 1
-            };
-            TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
-            TimeSeries.Plot(
-                TimeSeriesPlotInfo.Create(series: series, title: "Series", color: Color.Red),
-                TimeSeriesPlotInfo.Create(series: decomp.Trend, title: "Trend", color: Color.Green),
-                TimeSeriesPlotInfo.Create(series: decomp.Seasonal, title: "Seasonal", color: Color.Blue),
-                TimeSeriesPlotInfo.Create(series: decomp.Remainder, title: "Remainder", color: Color.Gray)
-                );
+            //DateTime firstDate = new DateTime(2000, 1, 1);
+            //DateTime lastDate = new DateTime(2000, 12, 31);
+            //TimeSeries trend = TimeSeries.CreateDailyLinearTimeSeries(0, 100, firstDate, lastDate);
+            //TimeSeries remainder = TimeSeries.CreateDailyNormallyRandomSeries(0, 2.5, firstDate, lastDate);
+            //TimeSeries series = trend.Sum(remainder);
+            //TimeSeries.Plot(series);
+            //LoessDecompositionParameters parameters = new LoessDecompositionParameters()
+            //{
+            //    Step = new TimeSpan(1, 0, 0, 0),
+            //    Series = series,
+            //    LocalPolynomialDegree = 1,
+            //    NumberOfNeighbors = 10,
+            //    SeasonalPeriod = new TimeSpan(30, 0, 0, 0),
+            //    RobustnessIterations = 1
+            //};
+            //TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
+            //TimeSeries.Plot(
+            //    TimeSeriesPlotInfo.Create(series: series, title: "Series", color: Color.Red),
+            //    TimeSeriesPlotInfo.Create(series: decomp.Trend, title: "Trend", color: Color.Green),
+            //    TimeSeriesPlotInfo.Create(series: decomp.Seasonal, title: "Seasonal", color: Color.Blue),
+            //    TimeSeriesPlotInfo.Create(series: decomp.Remainder, title: "Remainder", color: Color.Gray)
+            //    );
         }
 
         private static void TestLoessDecompositionSinus()
         {
-            DateTime firstDate = new DateTime(2000, 1, 1);
-            DateTime lastDate = new DateTime(2000, 12, 31);
-            int period = 30; //days
-            TimeSeries trend = TimeSeries.CreateDailyLinearTimeSeries(0, 100, firstDate, lastDate);
-            TimeSeries seasonal = TimeSeries.CreateDailySinusoidalTimeSeries(20, 2 * Math.PI / period, 0, firstDate, lastDate);
-            TimeSeries remainder = TimeSeries.CreateDailyNormallyRandomSeries(0, 2.5, firstDate, lastDate);
-            TimeSeries series = trend
-                .Sum(seasonal)
-                .Sum(remainder);
-            LoessDecompositionParameters parameters = new LoessDecompositionParameters()
-            {
-                Step = TimeSpan.FromDays(1),
-                Series = series,
-                LocalPolynomialDegree = 1,
-                NumberOfNeighbors = 30,
-                SeasonalPeriod = TimeSpan.FromDays(30),
-                RobustnessIterations = 1
-            };
-            TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
-            TimeSeries.Plot(
-                TimeSeriesPlotInfo.Create(series: series, title: "Series", color: Color.Red),
-                TimeSeriesPlotInfo.Create(series: decomp.Trend, title: "Trend", color: Color.Green),
-                TimeSeriesPlotInfo.Create(series: decomp.Seasonal, title: "Seasonal", color: Color.Blue),
-                TimeSeriesPlotInfo.Create(series: decomp.Remainder, title: "Remainder", color: Color.Gray)
-            );
+            //DateTime firstDate = new DateTime(2000, 1, 1);
+            //DateTime lastDate = new DateTime(2000, 12, 31);
+            //int period = 30; //days
+            //TimeSeries trend = TimeSeries.CreateDailyLinearTimeSeries(0, 100, firstDate, lastDate);
+            //TimeSeries seasonal = TimeSeries.CreateDailySinusoidalTimeSeries(20, 2 * Math.PI / period, 0, firstDate, lastDate);
+            //TimeSeries remainder = TimeSeries.CreateDailyNormallyRandomSeries(0, 2.5, firstDate, lastDate);
+            //TimeSeries series = trend
+            //    .Sum(seasonal)
+            //    .Sum(remainder);
+            //LoessDecompositionParameters parameters = new LoessDecompositionParameters()
+            //{
+            //    Step = TimeSpan.FromDays(1),
+            //    Series = series,
+            //    LocalPolynomialDegree = 1,
+            //    NumberOfNeighbors = 30,
+            //    SeasonalPeriod = TimeSpan.FromDays(30),
+            //    RobustnessIterations = 1
+            //};
+            //TimeSeriesDecomposition decomp = TimeSeriesDecomposition.DoLoessDecomposition(parameters);
+            //TimeSeries.Plot(
+            //    TimeSeriesPlotInfo.Create(series: series, title: "Series", color: Color.Red),
+            //    TimeSeriesPlotInfo.Create(series: decomp.Trend, title: "Trend", color: Color.Green),
+            //    TimeSeriesPlotInfo.Create(series: decomp.Seasonal, title: "Seasonal", color: Color.Blue),
+            //    TimeSeriesPlotInfo.Create(series: decomp.Remainder, title: "Remainder", color: Color.Gray)
+            //);
         }
 
         //private static void TestLinearPlusSinus()

@@ -449,7 +449,6 @@ namespace TimeSeriesAnalysis
                 .Deviation();
         }
 
-
         #endregion
 
         #region FILE INTERACTION

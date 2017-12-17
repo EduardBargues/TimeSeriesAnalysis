@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using OxyPlot;
+using TeslaAnalysis.Indicators;
 using TimeSeriesAnalysis;
 using Color = System.Drawing.Color;
 
@@ -15,6 +16,18 @@ namespace TeslaAnalysis
     {
         static void Main(string[] args)
         {
+            CandleTimeSeries series = new CandleTimeSeries();
+            TrueRange tri = TrueRange.Create(series);
+            List<DateTime> dates = new List<DateTime>();
+            List<(DateTime, double)> values = new List<(DateTime, double)>();
+            foreach (DateTime date in dates)
+            {
+                double trValue = tri.GetValueAt(date);
+                double trValue2 = tri[date];
+                (DateTime date, double trValue) tuple = (date,trValue);
+                values.Add(tuple);
+            }
+
             //TestTendecyLines();
             //TestTrueFxApi();
         }
@@ -49,11 +62,11 @@ namespace TeslaAnalysis
             int fastPeriod = 4;
             int mediumPeriod = 12;
             int slowPeriod = 30;
-            TimeSeries fastSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(fastPeriod))
+            TimeSeries fastSma = tsOpen.GetSimpleMovingAverage(fastPeriod)
                 .ToTimeSeries($"SMA-{fastPeriod}");
-            TimeSeries mediumSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(mediumPeriod))
+            TimeSeries mediumSma = tsOpen.GetSimpleMovingAverage(mediumPeriod)
                 .ToTimeSeries($"SMA-{mediumPeriod}");
-            TimeSeries slowSma = tsOpen.GetSimpleMovingAverage(TimeSpan.FromDays(slowPeriod))
+            TimeSeries slowSma = tsOpen.GetSimpleMovingAverage(slowPeriod)
                 .ToTimeSeries($"SMA-{slowPeriod}");
             Color colorUp = Color.Blue;
             Color colorDown = Color.Red;

@@ -36,11 +36,9 @@ namespace DashBoard
             {
                 connector.Connect(databaseConnectionString, userName, password);
                 IEnumerable<(string, object)[]> candlesInfo = connector.ExecuteReaderCommand("select * from BitCoinDailyCandles");
-                foreach ((string, object)[] info in candlesInfo)
-                {
-                    Candle candle = GetCandleFromDatabaseInfo(info);
-                    result[candle.Start] = candle;
-                }
+                result = candlesInfo
+                    .Select(GetCandleFromDatabaseInfo)
+                    .ToCandleTimeSeries();
                 connector.Disconnect();
             }
 

@@ -28,8 +28,8 @@ namespace DashBoard
 
         public DateTime StartDate => dateTimePickerFrom.Value;
         public DateTime EndDate => dateTimePickerTo.Value;
-        public TimeSpan IndicatorPeriod => TimeSpan.FromDays((int)numericUpDownDxPeriod.Value);
-        public TimeSpan SmoothingPeriod => TimeSpan.FromDays((int)numericUpDownAdxSmoothingPeriod.Value);
+        public int IndicatorPeriod => (int)numericUpDownDxPeriod.Value;
+        public int SmoothingPeriod => (int)numericUpDownAdxSmoothingPeriod.Value;
 
         public void LoadData(CandleTimeSeries series, IEnumerable<(TimeSeries, Color)> indicators)
         {

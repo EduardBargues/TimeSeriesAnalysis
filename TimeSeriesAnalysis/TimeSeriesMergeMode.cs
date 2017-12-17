@@ -4,10 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TeslaAnalysis
+namespace TimeSeriesAnalysis
 {
-    public interface IIndicator
+    public enum TimeSeriesMergeMode
     {
-        double GetValueAt(CandleTimeSeries series, DateTime instant);
+        Override,
+        Sum,
+        MantainOriginal
     }
 }

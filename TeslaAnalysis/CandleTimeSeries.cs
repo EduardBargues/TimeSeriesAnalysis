@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Windows.Forms;
 using Common;
+using MoreLinq;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using OxyPlot.WindowsForms;
+using TimeSeriesAnalysis;
 
 namespace TeslaAnalysis
 {
     public class CandleTimeSeries
     {
         private readonly Dictionary<DateTime, Candle> candlesByDate = new Dictionary<DateTime, Candle>();
+        private readonly Dictionary<Candle, int> indicesByCandle = new Dictionary<Candle, int>();
+        private readonly Candle[] candles;
 
         public IEnumerable<DateTime> Dates => candlesByDate.Keys;
         public IEnumerable<Candle> Candles => candlesByDate.Keys
@@ -21,30 +26,45 @@ namespace TeslaAnalysis
 
         public CandleTimeSeries()
         { }
-        public CandleTimeSeries(IEnumerable<Candle> candles)
+        public CandleTimeSeries(IEnumerable<Candle> candls)
         {
-            candlesByDate = candles.ToDictionary(candle => candle.Start);
+            Candle[] orderedCandles = candls
+                .OrderBy(candle => candle.Start)
+                .ToArray();
+
+            int count = orderedCandles.Length;
+
+            candles = new Candle[count];
+            orderedCandles
+                .ForEach((candle, index) =>
+                {
+                    candles[index] = candle;
+                    candlesByDate.Add(candle.Start, candle);
+                    indicesByCandle.Add(candle, index);
+                });
         }
-        public void SetCandle(DateTime date, Candle candle)
-        {
-            if (!ContainsValueAt(date))
-                candlesByDate.Add(date, candle);
-            candlesByDate[date] = candle;
-        }
-        public Candle GetValue(DateTime date)
+        public Candle GetCandle(DateTime date)
         {
             return candlesByDate[date];
         }
-        public bool TryGetValue(DateTime day, out Candle value)
+
+        public Candle GetCandle(int index)
         {
-            return candlesByDate.TryGetValue(day, out value);
+            return candles[index];
         }
-        public Candle this[DateTime date]
+        public Candle this[DateTime date] => GetCandle(date);
+        public Candle this[int index] => GetCandle(index);
+
+        public int GetIndex(Candle candle)
         {
-            get => GetValue(date);
-            set => SetCandle(date, value);
+            return indicesByCandle[candle];
         }
-        public bool ContainsValueAt(DateTime date)
+        public int GetIndex(DateTime date)
+        {
+            return GetIndex(candlesByDate[date]);
+        }
+
+        public bool ContainsCandleAt(DateTime date)
         {
             return candlesByDate.ContainsKey(date);
         }
@@ -61,8 +81,8 @@ namespace TeslaAnalysis
             form.Controls.Add(view);
             form.ShowDialog();
         }
-
-        public static PlotView GetPlotView(CandleTimeSeriesPlotInfo info, Action<object, AxisChangedEventArgs> onAxisChangedMethod = null)
+        public static PlotView GetPlotView(CandleTimeSeriesPlotInfo info
+            , Action<object, AxisChangedEventArgs> onAxisChangedMethod = null)
         {
             List<HighLowItem> items = info.Series.Candles
                 .OrderBy(candle => candle.Start)
@@ -120,7 +140,7 @@ namespace TeslaAnalysis
             };
             return view;
         }
-
+        
         public static CandleTimeSeries Create(IEnumerable<Candle> candles)
         {
             CandleTimeSeries series = new CandleTimeSeries(candles);
@@ -238,22 +258,7 @@ namespace TeslaAnalysis
 
             return candle;
         }
-
-        public DateTime? GetMinDate()
-        {
-            return candlesByDate.Keys.Any()
-                ? (DateTime?)candlesByDate.Keys.Min()
-                : null;
-        }
-
-        public DateTime? GetMaxDate()
-        {
-            return candlesByDate.Keys.Any()
-                ? (DateTime?)candlesByDate.Keys.Max()
-                : null;
-        }
-
-    }
+}
 
     public enum TradeCandleTransformation
     {

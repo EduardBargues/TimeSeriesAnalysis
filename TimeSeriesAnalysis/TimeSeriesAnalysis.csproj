@@ -73,7 +73,6 @@
     <Compile Include="DecompositionParameters.cs" />
     <Compile Include="IDateValuesFiller.cs" />
     <Compile Include="ITimeSeriesPredictor.cs" />
-    <Compile Include="LinearFiller.cs" />
     <Compile Include="Loess.cs" />
     <Compile Include="LoessDecompositionParameters.cs" />
     <Compile Include="MathFunction.cs" />
@@ -83,6 +82,7 @@
     <Compile Include="TemporalGapTuple.cs" />
     <Compile Include="TimeSeriesCorrelation.cs" />
     <Compile Include="TimeSeriesDecomposition.cs" />
+    <Compile Include="TimeSeriesMergeMode.cs" />
     <Compile Include="TimeSeriesPlotInfo.cs" />
     <Compile Include="TimeSeriesPredictorAverage.cs" />
     <Compile Include="TimeSeriesPredictorDrift.cs" />

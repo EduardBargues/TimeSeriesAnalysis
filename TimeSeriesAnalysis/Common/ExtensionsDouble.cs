@@ -10,11 +10,9 @@ namespace Common
     {
         public static double DivideBy(this double number, double number2)
         {
-            if (number <= Utils.Tolerance && 
-                number2 <= Utils.Tolerance)
-                return 1;
-
-            return number2 <= Utils.Tolerance ? double.MaxValue : number / number2;
+            return number2 <= Utils.Tolerance 
+                ? double.NaN 
+                : number / number2;
         }
     }
 }
