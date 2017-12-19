@@ -9,19 +9,19 @@ namespace TeslaAnalysis.Indicators
 {
     public class DirectionalIndicatorPlus : Indicator
     {
-        public DirectionalIndicatorPlus(Func<DateTime, double> function) : base(function)
+        public DirectionalIndicatorPlus(Func<CandleTimeSeries, DateTime, double> function) : base(function)
         {
 
         }
 
-        public static DirectionalIndicatorPlus Create(CandleTimeSeries series, int periods, int smoothingPeriods)
+        public static DirectionalIndicatorPlus Create(int periods, int smoothingPeriods)
         {
-            AverageDirectionalMovementPlus admPlus = AverageDirectionalMovementPlus.Create(series, periods, smoothingPeriods);
-            AverageTrueRange atr = AverageTrueRange.Create(series, smoothingPeriods);
+            AverageDirectionalMovementPlus admPlus = AverageDirectionalMovementPlus.Create(periods, smoothingPeriods);
+            AverageTrueRange atr = AverageTrueRange.Create(smoothingPeriods);
 
-            double Function(DateTime instant)
+            double Function(CandleTimeSeries series, DateTime instant)
             {
-                return admPlus.GetValueAt(instant).DivideBy(atr.GetValueAt(instant));
+                return admPlus[series, instant].DivideBy(atr[series, instant]);
             }
 
             DirectionalIndicatorPlus result = new DirectionalIndicatorPlus(Function);

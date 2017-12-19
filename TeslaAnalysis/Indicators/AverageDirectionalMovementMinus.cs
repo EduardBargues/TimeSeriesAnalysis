@@ -9,20 +9,19 @@ namespace TeslaAnalysis.Indicators
 {
     public class AverageDirectionalMovementMinus : Indicator
     {
-        public AverageDirectionalMovementMinus(Func<DateTime, double> function) : base(function)
+        public AverageDirectionalMovementMinus(Func<CandleTimeSeries, DateTime, double> function) : base(function)
         {
 
         }
 
         public static AverageDirectionalMovementMinus Create(
-            CandleTimeSeries series,
             int periods,
             int smoothingPeriods
             )
         {
-            DirectionalMovementMinus dmMinus = DirectionalMovementMinus.Create(series);
+            DirectionalMovementMinus dmMinus = DirectionalMovementMinus.Create();
 
-            double Function(DateTime instant)
+            double Function(CandleTimeSeries series, DateTime instant)
             {
                 Candle candle = series[instant];
                 int index = series.GetIndex(candle);
@@ -30,7 +29,7 @@ namespace TeslaAnalysis.Indicators
                     .Select(idx => series[idx])
                     .ToArray();
                 double ema = candles
-                    .WeightedAverage((cdl, idx) => dmMinus.GetValueAt(cdl.Start), (cdl, idx) => candles.Length - idx);
+                    .WeightedAverage((cdl, idx) => dmMinus[series,cdl.Start], (cdl, idx) => candles.Length - idx);
                 return ema;
             }
 

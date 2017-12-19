@@ -30,14 +30,12 @@ namespace DashBoard
             this.view = view;
             this.view.LoadDataRequest += View_LoadDataRequest;
         }
-
         private void View_LoadDataRequest()
         {
             CandleTimeSeries data = GetCandleTimeSeries();
             IEnumerable<(TimeSeries, Color)> indicators = GetIndicators();
             view.LoadData(data, indicators);
         }
-
         private IEnumerable<(TimeSeries, Color)> GetIndicators()
         {
             CandleTimeSeries series = Context.Instance.HistoryCandleTimeSeries.Candles
@@ -57,36 +55,35 @@ namespace DashBoard
             //    .ToTimeSeries("ATR");
             //yield return (atrSeries, Color.Red);
 
-            DirectionalIndicatorPlus diPlus = DirectionalIndicatorPlus.Create(series, view.IndicatorPeriod, view.SmoothingPeriod);
+            DirectionalIndicatorPlus diPlus = DirectionalIndicatorPlus.Create(view.IndicatorPeriod, view.SmoothingPeriod);
             TimeSeries diPlusSeries = series.Candles
                 .Where((candle, index) => index > 0)
-                .Select(candle => new DateValue(candle.Start, diPlus[candle.Start]))
+                .Select(candle => new DateValue(candle.Start, diPlus[series, candle.Start]))
                 .ToTimeSeries("DI+");
 
             yield return (diPlusSeries, Color.Blue);
 
-            DirectionalIndicatorMinus diMinus = DirectionalIndicatorMinus.Create(series, view.IndicatorPeriod, view.SmoothingPeriod);
+            DirectionalIndicatorMinus diMinus = DirectionalIndicatorMinus.Create(view.IndicatorPeriod, view.SmoothingPeriod);
             TimeSeries diMinusSeries = series.Candles
                 .Where((candle, index) => index > 0)
-                .Select(candle => new DateValue(candle.Start, diMinus[candle.Start]))
+                .Select(candle => new DateValue(candle.Start, diMinus[series, candle.Start]))
                 .ToTimeSeries("DI-");
             yield return (diMinusSeries, Color.Red);
 
-            DirectionalMovementIndex dx = DirectionalMovementIndex.Create(series, view.IndicatorPeriod, view.IndicatorPeriod);
+            DirectionalMovementIndex dx = DirectionalMovementIndex.Create(view.IndicatorPeriod, view.IndicatorPeriod);
             TimeSeries dxSeries = series.Candles
                 .Where((candle, index) => index > 0)
-                .Select(candle => new DateValue(candle.Start, dx[candle.Start]))
+                .Select(candle => new DateValue(candle.Start, dx[series, candle.Start]))
                 .ToTimeSeries("DX");
             yield return (dxSeries, Color.DarkSlateGray);
 
-            AverageDirectionalMovementIndex adx = AverageDirectionalMovementIndex.Create(series, view.IndicatorPeriod, view.SmoothingPeriod);
+            AverageDirectionalMovementIndex adx = AverageDirectionalMovementIndex.Create(view.IndicatorPeriod, view.SmoothingPeriod);
             TimeSeries adxSeries = series.Candles
                 .Where((candle, index) => index > 0)
-                .Select(candle => new DateValue(candle.Start, adx[candle.Start]))
+                .Select(candle => new DateValue(candle.Start, adx[series, candle.Start]))
                 .ToTimeSeries("ADX");
             yield return (adxSeries, Color.DarkGray);
         }
-
         private CandleTimeSeries GetCandleTimeSeries()
         {
             return Context.Instance.HistoryCandleTimeSeries.Candles

@@ -5,13 +5,13 @@ namespace TeslaAnalysis.Indicators
 {
     public class DirectionalMovementPlus : Indicator
     {
-        public DirectionalMovementPlus(Func<DateTime, double> function) : base(function)
+        public DirectionalMovementPlus(Func<CandleTimeSeries, DateTime, double> function) : base(function)
         {
         }
 
-        public static DirectionalMovementPlus Create(CandleTimeSeries series)
+        public static DirectionalMovementPlus Create()
         {
-            double Function(DateTime instant)
+            double Function(CandleTimeSeries series, DateTime instant)
             {
                 Candle currentCandle = series[instant];
                 int index = series.GetIndex(currentCandle);

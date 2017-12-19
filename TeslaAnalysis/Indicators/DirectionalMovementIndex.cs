@@ -5,19 +5,19 @@ namespace TeslaAnalysis.Indicators
 {
     public class DirectionalMovementIndex : Indicator
     {
-        public DirectionalMovementIndex(Func<DateTime, double> function) : base(function)
+        public DirectionalMovementIndex(Func<CandleTimeSeries, DateTime, double> function) : base(function)
         {
 
         }
 
-        public static DirectionalMovementIndex Create(CandleTimeSeries series, int periods, int smoothingPeriods)
+        public static DirectionalMovementIndex Create(int periods, int smoothingPeriods)
         {
-            DirectionalIndicatorPlus diPlus = DirectionalIndicatorPlus.Create(series, periods, smoothingPeriods);
-            DirectionalIndicatorMinus diMinus = DirectionalIndicatorMinus.Create(series, periods, smoothingPeriods);
-            double Function(DateTime instant)
+            DirectionalIndicatorPlus diPlus = DirectionalIndicatorPlus.Create(periods, smoothingPeriods);
+            DirectionalIndicatorMinus diMinus = DirectionalIndicatorMinus.Create(periods, smoothingPeriods);
+            double Function(CandleTimeSeries series, DateTime instant)
             {
-                double diDiff = Math.Abs(diPlus[instant] - diMinus[instant]);
-                double diSum = diPlus[instant] + diMinus[instant];
+                double diDiff = Math.Abs(diPlus[series, instant] - diMinus[series, instant]);
+                double diSum = diPlus[series, instant] + diMinus[series, instant];
                 double dx = diDiff.DivideBy(diSum);
                 return dx;
             }

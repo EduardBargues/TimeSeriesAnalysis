@@ -17,14 +17,13 @@ namespace TeslaAnalysis
         static void Main(string[] args)
         {
             CandleTimeSeries series = new CandleTimeSeries();
-            TrueRange tri = TrueRange.Create(series);
+            TrueRange tri = TrueRange.Create();
             List<DateTime> dates = new List<DateTime>();
             List<(DateTime, double)> values = new List<(DateTime, double)>();
             foreach (DateTime date in dates)
             {
-                double trValue = tri.GetValueAt(date);
-                double trValue2 = tri[date];
-                (DateTime date, double trValue) tuple = (date,trValue);
+                double trValue = tri[series, date];
+                (DateTime date, double trValue) tuple = (date, trValue);
                 values.Add(tuple);
             }
 

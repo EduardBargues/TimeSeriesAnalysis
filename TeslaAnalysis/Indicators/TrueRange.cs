@@ -5,13 +5,13 @@ namespace TeslaAnalysis.Indicators
 {
     public class TrueRange : Indicator
     {
-        public TrueRange(Func<DateTime, double> function) : base(function)
+        public TrueRange(Func<CandleTimeSeries, DateTime, double> function) : base(function)
         {
         }
 
-        public static TrueRange Create(CandleTimeSeries series)
+        public static TrueRange Create()
         {
-            double Function(DateTime date)
+            double Function(CandleTimeSeries series, DateTime date)
             {
                 Candle currentCandle = series[date];
                 int index = series.GetIndex(currentCandle);

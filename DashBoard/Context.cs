@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
@@ -15,22 +16,40 @@ namespace DashBoard
 {
     public class Context
     {
-        private string databaseConnectionString = @"Server=localhost\SQLEXPRESS;Database=FinancialFreedom";
-        private string userName = "sa";
-        private string password = "112358134711";
+        private readonly string databaseConnectionString;
+        private readonly string userName;
+        private readonly string password;
+        private const string databaseConfigurationFile = @"C:\Users\eduar\Desktop\databaseConnection.csv";
 
         private readonly Dictionary<DateTime, List<Trade>> tradesByDay = new Dictionary<DateTime, List<Trade>>();
+
         private CandleTimeSeries historyCandleTimeSeries;
+        public CandleTimeSeries HistoryCandleTimeSeries => historyCandleTimeSeries
+            ?? (historyCandleTimeSeries = GetHistoryCandleTimeSeriesFromDatabase());
 
-        public CandleTimeSeries HistoryCandleTimeSeries => historyCandleTimeSeries ?? (historyCandleTimeSeries = GetHistoryCandleTimeSeriesFromDatabase());
-
+        private Context(string dbConString, string uName, string psw)
+        {
+            databaseConnectionString = dbConString;
+            userName = uName;
+            password = psw;
+        }
         private static Context instance;
-        public static Context Instance => instance
-            ?? (instance = new Context());
+        public static Context Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    string[] lines = File.ReadAllLines(databaseConfigurationFile);
+                    instance = new Context(lines[0], lines[1], lines[2]);
+                }
+                return instance;
+            }
+        }
 
         private CandleTimeSeries GetHistoryCandleTimeSeriesFromDatabase()
         {
-            CandleTimeSeries result = new CandleTimeSeries();
+            CandleTimeSeries result;
 
             using (DatabaseConnector connector = new DatabaseConnector())
             {

@@ -40,7 +40,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actions\ITransaction.cs" />
+    <Compile Include="Actions\TransactionType.cs" />
+    <Compile Include="Actors\IActor.cs" />
+    <Compile Include="Brokers\Broker.cs" />
+    <Compile Include="Brokers\IBroker.cs" />
+    <Compile Include="Investments\IInvestment.cs" />
+    <Compile Include="Investments\Stock.cs" />
+    <Compile Include="Portfolios\IPortfolio.cs" />
+    <Compile Include="Portfolios\Portfolio.cs" />
+    <Compile Include="Strategies\Istrategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Strategies\SimpleStrategy.cs" />
+    <Compile Include="Strategies\Strategy.cs" />
+    <Compile Include="Actions\Transaction.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TeslaAnalysis\CandleTimeSeries.csproj">
+      <Project>{a22261b5-e955-4cba-bb27-63d9d005db06}</Project>
+      <Name>CandleTimeSeries</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

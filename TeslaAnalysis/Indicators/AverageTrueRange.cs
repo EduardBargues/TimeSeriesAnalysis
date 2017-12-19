@@ -6,15 +6,15 @@ namespace TeslaAnalysis.Indicators
 {
     public class AverageTrueRange : Indicator
     {
-        public AverageTrueRange(Func<DateTime, double> function) : base(function)
+        public AverageTrueRange(Func<CandleTimeSeries, DateTime, double> function) : base(function)
         {
         }
 
-        public static AverageTrueRange Create(CandleTimeSeries series, int smoothingPeriods)
+        public static AverageTrueRange Create(int smoothingPeriods)
         {
-            TrueRange tr = TrueRange.Create(series);
+            TrueRange tr = TrueRange.Create();
 
-            double Function(DateTime date)
+            double Function(CandleTimeSeries series, DateTime date)
             {
                 Candle candle = series[date];
                 int index = series.GetIndex(candle);
@@ -22,7 +22,7 @@ namespace TeslaAnalysis.Indicators
                     .Select(idx => series[idx])
                     .ToArray();
                 double ema = candles
-                    .WeightedAverage((cdl, idx) => tr[cdl.Start], 
+                    .WeightedAverage((cdl, idx) => tr[series, cdl.Start],
                                      (cdl, idx) => candles.Length - idx);
                 return ema;
             }
