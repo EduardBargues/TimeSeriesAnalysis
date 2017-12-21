@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Common;
+using CommonUtils;
 using MathNet.Numerics.Statistics;
 using MoreLinq;
 using OfficeOpenXml;
@@ -173,7 +173,7 @@ namespace TimeSeriesAnalysis
             DateTime lastDate = values.Keys
                 .Max(date => date);
 
-            return ExtensionsDateTime.GetDatesTo(firstDate, lastDate, step)
+            return firstDate.GetDatesTo(lastDate, step)
                 .Select(date => new DateValue(date, values.ContainsKey(date) ? values[date] : f.Invoke(date)));
         }
         /// <summary>
@@ -200,7 +200,7 @@ namespace TimeSeriesAnalysis
             int destinyYear)
         {
             IEnumerable<DateValue> listToProcess = !DateTime.IsLeapYear(destinyYear)
-                ? l.Where(dv => !ExtensionsDateTime.IsFebruary29S(dv.Date))
+                ? l.Where(dv => !dv.Date.IsFebruary29S())
                 : l;
             return listToProcess
                 .Select(dv =>

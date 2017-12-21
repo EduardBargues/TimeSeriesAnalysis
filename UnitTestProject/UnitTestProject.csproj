@@ -69,12 +69,6 @@
     <Compile Include="TimeSeriesPredictionTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TimeSeriesAnalysis\TimeSeriesAnalysis.csproj">
-      <Project>{94b52089-5070-464c-ad77-42d31a7afe46}</Project>
-      <Name>TimeSeriesAnalysis</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Choose>

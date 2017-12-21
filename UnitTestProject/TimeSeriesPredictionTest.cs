@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TimeSeriesAnalysis;
 using System.Data;
-using MachineLearning;
 using MoreLinq;
 
 namespace UnitTestProject
