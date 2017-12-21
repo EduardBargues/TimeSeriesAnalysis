@@ -75,14 +75,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TeslaAnalysis\CandleTimeSeries.csproj">
-      <Project>{a22261b5-e955-4cba-bb27-63d9d005db06}</Project>
-      <Name>CandleTimeSeries</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{ca321526-92bc-4572-a3c7-6b57968b1c3d}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\TimeSeriesAnalysis.csproj">
       <Project>{94b52089-5070-464c-ad77-42d31a7afe46}</Project>
       <Name>TimeSeriesAnalysis</Name>

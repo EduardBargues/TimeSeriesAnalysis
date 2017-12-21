@@ -9,10 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject", "..\UnitT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAppProject", "TestAppProject\TestAppProject.csproj", "{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{CA321526-92BC-4572-A3C7-6B57968B1C3D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MachineLearning", "MachineLearning\MachineLearning.csproj", "{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{9358D248-6634-464C-AA0A-D1DF05C93AA5}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\asdf\STL_Aluminum.csv = ..\..\asdf\STL_Aluminum.csv
@@ -25,10 +21,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProjectNuget", "..\UnitTestProjectNuget\UnitTestProjectNuget.csproj", "{4FA1F61D-557A-441E-BB1F-4853C8303835}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CandleTimeSeries", "..\TeslaAnalysis\CandleTimeSeries.csproj", "{A22261B5-E955-4CBA-BB27-63D9D005DB06}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Strategy", "..\Strategy\Strategy.csproj", "{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,26 +40,10 @@ Global
 		{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D73D0CA-761E-4BD5-B0AC-6AB87F1C8945}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CA321526-92BC-4572-A3C7-6B57968B1C3D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E8BC7396-4CFF-4A89-B4CC-291826D62FA9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FA1F61D-557A-441E-BB1F-4853C8303835}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A22261B5-E955-4CBA-BB27-63D9D005DB06}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DE2CB87A-C423-4A2D-8BEE-3746A8DA5CC2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
