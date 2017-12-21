@@ -53,6 +53,10 @@ namespace TeslaAnalysis
                     {
                         int factor = grouping.Key;
                         DateTime candleStart = firstDate + candlesDuration.MultiplyBy(factor);
+                        if (candleStart.Day==5)
+                        {
+                            
+                        }
                         Candle candle = grouping.ToCandle(startDate: candleStart, duration: candlesDuration);
                         return candle;
                     });

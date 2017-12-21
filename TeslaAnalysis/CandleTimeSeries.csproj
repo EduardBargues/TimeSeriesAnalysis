@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A22261B5-E955-4CBA-BB27-63D9D005DB06}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TeslaAnalysis</RootNamespace>
     <AssemblyName>TeslaAnalysis</AssemblyName>
@@ -34,6 +34,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Machine.Specifications, Version=0.12.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -97,7 +100,6 @@
     <Compile Include="ExtensionsIEnumerableTrade.cs" />
     <Compile Include="Indicators\IIndicator.cs" />
     <Compile Include="Indicators\Indicator.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Trade.cs" />
     <Compile Include="Indicators\TrueRange.cs" />
