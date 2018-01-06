@@ -136,9 +136,21 @@ namespace TimeSeriesAnalysis
         }
 
         // GET VALUES
+        public int Count()
+        {
+            return dateValues.Length;
+        }
         public double GetValue(DateTime date)
         {
             return valuesByDate[date];
+        }
+        public double GetValue(int index)
+        {
+            return dateValues[index].Value;
+        }
+        public DateTime GetDate(int index)
+        {
+            return dateValues[index].Date;
         }
         public double this[DateTime date]
         {
@@ -158,7 +170,68 @@ namespace TimeSeriesAnalysis
         {
             return dateValues.Any();
         }
+        public int GetIndex(DateTime date)
+        {
+            return indicesByDate[date];
+        }
+        public double GetDerivative(DateTime date
+            , DifferentiationMode mode = DifferentiationMode.Centered
+            , TimeScale scale = TimeScale.Days)
+        {
+            int index = GetIndex(date);
+            int leftIndex, rightIndex;
+            switch (mode)
+            {
+                case DifferentiationMode.Left:
+                    leftIndex = index - 1;
+                    rightIndex = index;
+                    break;
+                case DifferentiationMode.Centered:
+                    leftIndex = index - 1;
+                    rightIndex=index + 1;
+                    break;
+                case DifferentiationMode.Right:
+                    leftIndex = index;
+                    rightIndex = index + 1;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+            }
 
+            double leftValue = GetValue(leftIndex);
+            double rightValue = GetValue(rightIndex);
+            DateTime leftDate = GetDate(leftIndex);
+            DateTime rightDate = GetDate(rightIndex);
+            TimeSpan span = rightDate - leftDate;
+            double temporalSpan = GetTemporalSpan(span, scale);
+
+            return (rightValue - leftValue).DivideBy(temporalSpan);
+        }
+        public double GetDerivative(int index
+            , DifferentiationMode mode = DifferentiationMode.Centered
+            , TimeScale scale = TimeScale.Days)
+        {
+            return GetDerivative(GetDate(index), mode, scale);
+        }
+        private double GetTemporalSpan(TimeSpan span, TimeScale scale)
+        {
+            switch (scale)
+            {
+                case TimeScale.Days:
+                    return span.TotalDays;
+                case TimeScale.Hours:
+                    return span.TotalHours;
+                case TimeScale.Minutes:
+                    return span.TotalMinutes;
+                case TimeScale.Seconds:
+                    return span.TotalSeconds;
+                case TimeScale.Milliseconds:
+                    return span.TotalMilliseconds;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(scale), scale, null);
+            }
+        }
+        
         #region Apply functions
 
         public TimeSeries Sum(TimeSeries ts)

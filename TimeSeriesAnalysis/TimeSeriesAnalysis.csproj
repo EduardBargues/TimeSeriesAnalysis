@@ -36,13 +36,11 @@
     <Reference Include="CommonUtils, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\CommonUtils.NET.1.0.1\lib\net461\CommonUtils.dll</HintPath>
     </Reference>
-    <Reference Include="EPPlus, Version=4.1.1.0, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
-      <HintPath>packages\EPPlus.4.1.1\lib\net40\EPPlus.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="EPPlus, Version=4.5.0.1, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>packages\EPPlus.4.5.0.1-beta\lib\net40\EPPlus.dll</HintPath>
     </Reference>
-    <Reference Include="MathNet.Numerics, Version=3.20.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\MathNet.Numerics.3.20.0\lib\net40\MathNet.Numerics.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="MathNet.Numerics, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\MathNet.Numerics.4.0.0-alpha04\lib\net40\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="MoreLinq, Version=2.8.21218.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
       <HintPath>packages\CommonUtils.NET.1.0.1\lib\net461\MoreLinq.dll</HintPath>
@@ -53,10 +51,14 @@
     <Reference Include="OxyPlot.WindowsForms, Version=1.0.0.0, Culture=neutral, PublicKeyToken=245eacd6b5d2d338, processorArchitecture=MSIL">
       <HintPath>packages\CommonUtils.NET.1.0.1\lib\net461\OxyPlot.WindowsForms.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\CommonUtils.NET.1.0.1\lib\net461\System.ValueTuple.dll</HintPath>
     </Reference>
@@ -71,6 +73,7 @@
   <ItemGroup>
     <Compile Include="CorrelationAnalysisParameters.cs" />
     <Compile Include="DateValue.cs" />
+    <Compile Include="DifferentiationMode.cs" />
     <Compile Include="ExtensionsDateValue.cs" />
     <Compile Include="DecompositionParameters.cs" />
     <Compile Include="IDateValuesFiller.cs" />
@@ -82,6 +85,7 @@
     <Compile Include="StlDecompositionParameters.cs" />
     <Compile Include="TemporalGapGroup.cs" />
     <Compile Include="TemporalGapTuple.cs" />
+    <Compile Include="TimeScale.cs" />
     <Compile Include="TimeSeriesCorrelation.cs" />
     <Compile Include="TimeSeriesDecomposition.cs" />
     <Compile Include="TimeSeriesMergeMode.cs" />
@@ -93,6 +97,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
