@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using CommonUtils;
+﻿using CommonUtils;
 using MoreLinq;
 using OfficeOpenXml;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using OxyPlot.WindowsForms;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace TimeSeriesAnalysis
 {
@@ -183,19 +183,19 @@ namespace TimeSeriesAnalysis
             switch (mode)
             {
                 case DifferentiationMode.Left:
-                    leftIndex = index - 1;
-                    rightIndex = index;
-                    break;
+                leftIndex = index - 1;
+                rightIndex = index;
+                break;
                 case DifferentiationMode.Centered:
-                    leftIndex = index - 1;
-                    rightIndex=index + 1;
-                    break;
+                leftIndex = index - 1;
+                rightIndex = index + 1;
+                break;
                 case DifferentiationMode.Right:
-                    leftIndex = index;
-                    rightIndex = index + 1;
-                    break;
+                leftIndex = index;
+                rightIndex = index + 1;
+                break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
 
             double leftValue = GetValue(leftIndex);
@@ -218,20 +218,20 @@ namespace TimeSeriesAnalysis
             switch (scale)
             {
                 case TimeScale.Days:
-                    return span.TotalDays;
+                return span.TotalDays;
                 case TimeScale.Hours:
-                    return span.TotalHours;
+                return span.TotalHours;
                 case TimeScale.Minutes:
-                    return span.TotalMinutes;
+                return span.TotalMinutes;
                 case TimeScale.Seconds:
-                    return span.TotalSeconds;
+                return span.TotalSeconds;
                 case TimeScale.Milliseconds:
-                    return span.TotalMilliseconds;
+                return span.TotalMilliseconds;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(scale), scale, null);
+                throw new ArgumentOutOfRangeException(nameof(scale), scale, null);
             }
         }
-        
+
         #region Apply functions
 
         public TimeSeries Sum(TimeSeries ts)
@@ -276,14 +276,14 @@ namespace TimeSeriesAnalysis
                     switch (mergeAction)
                     {
                         case TimeSeriesMergeMode.Override:
-                            return ts[date];
+                        return ts[date];
                         case TimeSeriesMergeMode.Sum:
-                            return (this.ContainsValueAt(date) ? this[date] : 0) +
-                                   (ts.ContainsValueAt(date) ? ts[date] : 0);
+                        return (this.ContainsValueAt(date) ? this[date] : 0) +
+                               (ts.ContainsValueAt(date) ? ts[date] : 0);
                         case TimeSeriesMergeMode.MantainOriginal:
-                            return this.ContainsValueAt(date) ? this[date] : ts[date];
+                        return this.ContainsValueAt(date) ? this[date] : ts[date];
                         default:
-                            throw new ArgumentOutOfRangeException(nameof(mergeAction), mergeAction, null);
+                        throw new ArgumentOutOfRangeException(nameof(mergeAction), mergeAction, null);
                     }
                 });
             return Create(dictionary);
@@ -647,35 +647,65 @@ namespace TimeSeriesAnalysis
 
         public IEnumerable<DateValue> GetSimpleMovingAverage(int periods)
         {
-            return from dv in dateValues
-                   let average = indicesByDate[dv.Date].GetIntegersTo(Math.Max(0, indicesByDate[dv.Date] - periods))
-                                    .Average(index => dateValues[index].Value)
-                   select new DateValue(dv.Date, average);
+            foreach (DateValue dv in dateValues)
+            {
+                double average = GetSimpleMovingAverageAt(dv.Date, periods);
+                yield return new DateValue(dv.Date, average);
+            }
         }
+        private double GetSimpleMovingAverageAt(DateTime date, int periods)
+        {
+            int dateIndex = indicesByDate[date];
+            double average = dateIndex
+                .GetIntegersTo(dateIndex - periods + 1)
+                .Where(index => index >= 0)
+                .Average(index => dateValues[index].Value);
+            return average;
+        }
+
         public IEnumerable<DateValue> GetCenteredMovingAverage(int periods)
         {
             return GetCenteredMovingAverage(periods / 2, periods / 2);
         }
         public IEnumerable<DateValue> GetCenteredMovingAverage(int leftPeriods, int rightPeriods)
         {
-            int maxIndex = dateValues.Length - 1;
-            return from dv in dateValues
-                   let leftIndex = Math.Max(0, indicesByDate[dv.Date] - leftPeriods)
-                   let rightIndex = Math.Min(maxIndex, indicesByDate[dv.Date] + rightPeriods)
-                   let average = leftIndex.GetIntegersTo(rightIndex)
-                                    .Average(index => dateValues[index].Value)
-                   select new DateValue(dv.Date, average);
+            foreach (DateValue dv in dateValues)
+            {
+                double average = GetCenteredMovingAverageAt(dv.Date, leftPeriods, rightPeriods);
+                yield return new DateValue(dv.Date, average);
+            }
         }
+        public double GetCenteredMovingAverageAt(DateTime date, int leftPeriods, int rightPeriods)
+        {
+            int maxIndex = dateValues.Length - 1;
+            int dateIndex = indicesByDate[date];
+            int leftIndex = Math.Max(0, dateIndex - leftPeriods);
+            int rightIndex = Math.Min(maxIndex, indicesByDate[date] + rightPeriods);
+            double average = leftIndex.GetIntegersTo(rightIndex)
+                .Average(index => dateValues[index].Value);
+            return average;
+        }
+
         public IEnumerable<DateValue> GetExponentialMovingAverage(int periods)
         {
-            return from dv in dateValues
-                   let valuesToUse = indicesByDate[dv.Date].GetIntegersTo(Math.Max(0, indicesByDate[dv.Date] - periods))
-                                        .Select(index => dateValues[index])
-                                        .ToArray()
-                   let ema = valuesToUse
-                                .WeightedAverage(function: (dateValue, index) => dateValue.Value,
-                                                 weightFunction: (dateValue, index) => valuesToUse.Length - index)
-                   select new DateValue(dv.Date, ema);
+            foreach (DateValue dv in dateValues)
+            {
+                double ema = GetExponentialMovingAverageAt(dv.Date, periods);
+                yield return new DateValue(dv.Date, ema);
+            }
+        }
+        public double GetExponentialMovingAverageAt(DateTime date, int periods)
+        {
+            int dateIndex = indicesByDate[date];
+            DateValue[] valuesToUse = dateIndex
+                .GetIntegersTo(dateIndex - periods + 1)
+                .Where(index => index >= 0)
+                .Select(index => dateValues[index])
+                .ToArray();
+            double ema = valuesToUse
+                .WeightedAverage(function: (dateValue, index) => dateValue.Value,
+                                 weightFunction: (dateValue, index) => valuesToUse.Length - index);
+            return ema;
         }
 
         #endregion
